@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de SKU</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --pink: #e6007d;
+      --purple: #4e2a6a;
+      --purple-light: rgba(78,42,106,0.08);
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-image: url('https://brandepica.com/firmas/Fondo_BE-01.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-color: #e8eaf0;
+      min-height: 100vh;
+      margin: 0;
+    }
+    html {
+      background-color: #e8eaf0;
+    }
+    select, input[type="date"] {
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      padding: 0.4rem 0.6rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select:focus, input[type="date"]:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 2px rgba(78,42,106,0.15);
+    }
+
+    /* Platform cards */
+    .plat-card {
+      background: var(--purple-light);
+      border: 1.5px solid transparent;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .plat-card:hover { border-color: var(--purple); }
+    .plat-card.active {
+      border-color: var(--pink);
+      background: rgba(230,0,125,0.08);
+    }
+    .plat-card .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--purple);
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .plat-card.active .dot {
+      background: var(--pink);
+      border-color: var(--pink);
+    }
+    .plat-card label { cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--purple); }
+
+    /* Format rows per platform */
+    .plat-format-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: white;
+      border: 1.5px solid var(--purple);
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      animation: slideIn 0.18s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .plat-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--purple);
+      color: white;
+      padding: 2px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .plat-format-row select {
+      border-color: #d1d5db;
+      font-size: 0.85rem;
+      padding: 0.25rem 0.5rem;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .remove-btn:hover { color: var(--pink); }
+
+    /* SKU result chips */
+    .sku-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--purple-light);
+      color: var(--purple);
+      padding: 0.45rem 0.85rem;
+      border-radius: 0.4rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      animation: slideIn 0.2s ease;
+    }
+    .copy-btn {
+      font-size: 0.75rem;
+      background: var(--purple);
+      color: white;
+      border: none;
+      padding: 3px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { background: var(--pink); }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white p-6 rounded-xl shadow-md w-full max-w-2xl">
+    <h1 class="text-2xl font-bold mb-6 text-center" style="color:var(--pink)">Generador de SKU</h1>
+
+    <div class="space-y-5">
+
+      <!-- Cliente + Submarca -->
+      <div class="flex gap-4">
+        <div class="w-1/2">
+          <label class="block font-medium mb-1 text-sm">Cliente</label>
+          <select id="cliente">
+            <option value="">—</option>
+            <option value="ALE">Aleatica</option>
+            <option value="AE">Aleatica Engage</option>
+            <option value="AC">Aleatica Connect</option>
+            <option value="BE">Brandépica</option>
+            <option value="DAI">Daikin</option>
+            <option value="ENG">Engen</option>
+            <option value="EVO">Evolution</option>
+            <option value="FUND">Fundación Aleatica</option>
+            <option value="NIK">Nikki Weil</option>
+            <option value="NUT">Nutrical</option>
+            <option value="TEL">TeleVía</option>
+            <option value="VAR">Varlix</option>
+            <option value="WAL">Waldorf Astoria</option>
+          </select>
+        </div>
+        <div class="w-1/2">
+          <label class="block font-medium mb-1 text-sm">Submarca</label>
+          <select id="submarca">
+            <option value="">—</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Fecha -->
+      <div class="w-1/2 pr-2">
+        <label class="block font-medium mb-1 text-sm">Fecha</label>
+        <input type="date" id="fecha" />
+      </div>
+
+      <!-- Plataformas (toggle cards) -->
+      <div>
+        <label class="block font-medium mb-2 text-sm">Plataformas</label>
+        <div class="flex flex-wrap gap-2" id="plataformas-grid">
+          <!-- cards injected by JS -->
+        </div>
+      </div>
+
+      <!-- Plataformas activas con su formato -->
+      <div id="formatos-container" class="space-y-2 hidden">
+        <label class="block font-medium text-sm" style="color:var(--purple)">Formato por plataforma</label>
+        <div id="formatos-rows" class="space-y-2"></div>
+      </div>
+
+      <hr class="border-t-2" style="border-color:var(--purple)" />
+      <p class="text-sm font-semibold" style="color:var(--pink)">SKUs resultantes</p>
+      <div id="resultado" class="space-y-2"></div>
+
+      <div class="flex justify-center mt-4">
+        <img src="https://brandepica.com/firmas/firma-nueva-BE1.jpg" alt="Logo Brandépica"
+          style="width:180px;height:35px;object-fit:contain;" />
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const PLATAFORMAS = [
+    { label: "Facebook",  value: "FB", formatos: [
+        { label: "Imagen",     value: "IMG"   },
+        { label: "Video",      value: "VIDEO" },
+        { label: "Carrusel",   value: "CAR"   },
+        { label: "Galería",    value: "GAL"   },
+        { label: "Colección",  value: "COL"   },
+        { label: "Stories",    value: "STO"   },
+        { label: "Reel",       value: "REEL"  },
+    ]},
+    { label: "Instagram", value: "IG", formatos: [
+        { label: "Imagen",     value: "IMG"   },
+        { label: "Video",      value: "VIDEO" },
+        { label: "Carrusel",   value: "CAR"   },
+        { label: "Reel",       value: "REEL"  },
+        { label: "Stories",    value: "STO"   },
+    ]},
+    { label: "X",         value: "X",  formatos: [
+        { label: "Imagen",     value: "IMG"   },
+        { label: "Video",      value: "VIDEO" },
+        { label: "Galería",    value: "GAL"   },
+    ]},
+    { label: "LinkedIn",  value: "LK", formatos: [
+        { label: "Imagen",     value: "IMG"   },
+        { label: "Video",      value: "VIDEO" },
+        { label: "Carrusel",   value: "CAR"   },
+    ]},
+    { label: "TikTok",    value: "TK", formatos: [
+        { label: "Video",      value: "VIDEO" },
+        { label: "Imagen",     value: "IMG"   },
+        { label: "Stories",    value: "STO"   },
+    ]},
+    { label: "YouTube",   value: "YT", formatos: [
+        { label: "Video",      value: "VIDEO" },
+        { label: "Thumbnail",  value: "THU"   },
+        { label: "Cover",      value: "COV"   },
+    ]},
+  ];
+
+  const SUBMARCAS = {
+    ALE: {
+      "Circuito Exterior Mexiquense": "CEM",
+      "Autopista Urbana Norte": "AUN",
+      "Viaducto Bicentenario": "VB",
+      "Autopista Urbana Norte y Viaducto Bicentenario": "AUNVB",
+      "Comunicación Interna": "CoINT",
+    },
+    DIM: {
+      "Daikin": "DAI",
+      "AirCommunity": "ACOM",
+      "AirTech": "ATEC",
+    },
+  };
+
+  // State: map platformValue → selectedFormatoValue
+  const activePlatforms = new Map();
+
+  // Build platform toggle cards
+  const grid = document.getElementById("plataformas-grid");
+  PLATAFORMAS.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "plat-card";
+    card.dataset.value = p.value;
+    card.innerHTML = `<span class="dot"></span><label>${p.label}</label>`;
+    card.addEventListener("click", () => togglePlatform(p.value, p.label, card));
+    grid.appendChild(card);
+  });
+
+  function togglePlatform(value, label, card) {
+    if (activePlatforms.has(value)) {
+      activePlatforms.delete(value);
+      card.classList.remove("active");
+    } else {
+      activePlatforms.set(value, "");
+      card.classList.add("active");
+    }
+    renderFormatoRows();
+    generarSKU();
+  }
+
+  function renderFormatoRows() {
+    const container = document.getElementById("formatos-container");
+    const rows = document.getElementById("formatos-rows");
+    rows.innerHTML = "";
+
+    if (activePlatforms.size === 0) {
+      container.classList.add("hidden");
+      return;
+    }
+    container.classList.remove("hidden");
+
+    activePlatforms.forEach((formatoVal, platVal) => {
+      const plat = PLATAFORMAS.find(p => p.value === platVal);
+      const row = document.createElement("div");
+      row.className = "plat-format-row";
+
+      // Badge
+      const badge = document.createElement("span");
+      badge.className = "plat-badge";
+      badge.textContent = plat.label;
+      row.appendChild(badge);
+
+      // Formato select
+      const sel = document.createElement("select");
+      sel.style.flex = "1";
+      sel.innerHTML = `<option value="">— Formato —</option>` +
+        plat.formatos.map(f => `<option value="${f.value}"${formatoVal === f.value ? " selected" : ""}>${f.label}</option>`).join("");
+      sel.addEventListener("change", () => {
+        activePlatforms.set(platVal, sel.value);
+        generarSKU();
+      });
+      row.appendChild(sel);
+
+      // Remove button
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "remove-btn";
+      removeBtn.title = "Quitar plataforma";
+      removeBtn.innerHTML = "✕";
+      removeBtn.addEventListener("click", () => {
+        activePlatforms.delete(platVal);
+        // Uncheck card
+        const card = document.querySelector(`.plat-card[data-value="${platVal}"]`);
+        if (card) card.classList.remove("active");
+        renderFormatoRows();
+        generarSKU();
+      });
+      row.appendChild(removeBtn);
+
+      rows.appendChild(row);
+    });
+  }
+
+  // Cliente → submarca
+  document.getElementById("cliente").addEventListener("change", function () {
+    const submarcaSelect = document.getElementById("submarca");
+    submarcaSelect.innerHTML = '<option value="">—</option>';
+    const subs = SUBMARCAS[this.value];
+    if (subs) {
+      Object.entries(subs).forEach(([nombre, abr]) => {
+        const o = document.createElement("option");
+        o.value = abr; o.textContent = nombre;
+        submarcaSelect.appendChild(o);
+      });
+    }
+    generarSKU();
+  });
+
+  document.getElementById("submarca").addEventListener("change", generarSKU);
+  document.getElementById("fecha").addEventListener("change", generarSKU);
+
+  function generarSKU() {
+    const cliente = document.getElementById("cliente").value;
+    const submarca = document.getElementById("submarca").value;
+    const fecha = document.getElementById("fecha").value;
+    const resultadoDiv = document.getElementById("resultado");
+    resultadoDiv.innerHTML = "";
+
+    if (!cliente) return;
+    const fechaFormateada = fecha ? fecha.replace(/-/g, "").slice(2) : "";
+
+    if (activePlatforms.size === 0) {
+      // No platforms: just cliente + submarca + fecha
+      const partes = [cliente];
+      if (submarca) partes.push(submarca);
+      if (fechaFormateada) partes.push(fechaFormateada);
+      renderChip(partes.join("-"), resultadoDiv);
+      return;
+    }
+
+    activePlatforms.forEach((formato, plat) => {
+      const partes = [cliente];
+      if (submarca) partes.push(submarca);
+      if (fechaFormateada) partes.push(fechaFormateada);
+      partes.push(plat);
+      if (formato) partes.push(formato);
+      renderChip(partes.join("-"), resultadoDiv);
+    });
+  }
+
+  function renderChip(sku, container) {
+    const chip = document.createElement("div");
+    chip.className = "sku-chip";
+    const span = document.createElement("span");
+    span.textContent = sku;
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copiar";
+    btn.onclick = () => {
+      navigator.clipboard.writeText(sku).then(() => {
+        btn.textContent = "¡Copiado!";
+        setTimeout(() => btn.textContent = "Copiar", 2000);
+      });
+    };
+    chip.appendChild(span);
+    chip.appendChild(btn);
+    container.appendChild(chip);
+  }
+</script>
+</body>
+</html>
