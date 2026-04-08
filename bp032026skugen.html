@@ -22,9 +22,7 @@
       min-height: 100vh;
       margin: 0;
     }
-    html {
-      background-color: #e8eaf0;
-    }
+    html { background-color: #e8eaf0; }
     select, input[type="date"] {
       border: 1px solid #d1d5db;
       border-radius: 0.375rem;
@@ -37,8 +35,6 @@
       border-color: var(--purple);
       box-shadow: 0 0 0 2px rgba(78,42,106,0.15);
     }
-
-    /* Platform cards */
     .plat-card {
       background: var(--purple-light);
       border: 1.5px solid transparent;
@@ -68,8 +64,6 @@
       border-color: var(--pink);
     }
     .plat-card label { cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--purple); }
-
-    /* Format rows per platform */
     .plat-format-row {
       display: flex;
       align-items: center;
@@ -111,8 +105,6 @@
       flex-shrink: 0;
     }
     .remove-btn:hover { color: var(--pink); }
-
-    /* SKU result chips */
     .sku-chip {
       display: flex;
       align-items: center;
@@ -144,8 +136,6 @@
     <h1 class="text-2xl font-bold mb-6 text-center" style="color:var(--pink)">Generador de SKU</h1>
 
     <div class="space-y-5">
-
-      <!-- Cliente + Submarca -->
       <div class="flex gap-4">
         <div class="w-1/2">
           <label class="block font-medium mb-1 text-sm">Cliente</label>
@@ -174,21 +164,16 @@
         </div>
       </div>
 
-      <!-- Fecha -->
       <div class="w-1/2 pr-2">
         <label class="block font-medium mb-1 text-sm">Fecha</label>
         <input type="date" id="fecha" />
       </div>
 
-      <!-- Plataformas (toggle cards) -->
       <div>
         <label class="block font-medium mb-2 text-sm">Plataformas</label>
-        <div class="flex flex-wrap gap-2" id="plataformas-grid">
-          <!-- cards injected by JS -->
-        </div>
+        <div class="flex flex-wrap gap-2" id="plataformas-grid"></div>
       </div>
 
-      <!-- Plataformas activas con su formato -->
       <div id="formatos-container" class="space-y-2 hidden">
         <label class="block font-medium text-sm" style="color:var(--purple)">Formato por plataforma</label>
         <div id="formatos-rows" class="space-y-2"></div>
@@ -202,47 +187,46 @@
         <img src="https://brandepica.com/firmas/firma-nueva-BE1.jpg" alt="Logo Brandépica"
           style="width:180px;height:35px;object-fit:contain;" />
       </div>
-
     </div>
   </div>
 
 <script>
   const PLATAFORMAS = [
     { label: "Facebook",  value: "FB", formatos: [
-        { label: "Imagen",     value: "IMG"   },
-        { label: "Video",      value: "VIDEO" },
-        { label: "Carrusel",   value: "CAR"   },
-        { label: "Galería",    value: "GAL"   },
-        { label: "Colección",  value: "COL"   },
-        { label: "Stories",    value: "STO"   },
-        { label: "Reel",       value: "REEL"  },
+        { label: "Imagen",    value: "IMG"   },
+        { label: "Video",     value: "VIDEO" },
+        { label: "Carrusel",  value: "CAR"   },
+        { label: "Galería",   value: "GAL"   },
+        { label: "Colección", value: "COL"   },
+        { label: "Stories",   value: "STO"   },
+        { label: "Reel",      value: "REEL"  },
     ]},
     { label: "Instagram", value: "IG", formatos: [
-        { label: "Imagen",     value: "IMG"   },
-        { label: "Video",      value: "VIDEO" },
-        { label: "Carrusel",   value: "CAR"   },
-        { label: "Reel",       value: "REEL"  },
-        { label: "Stories",    value: "STO"   },
+        { label: "Imagen",    value: "IMG"   },
+        { label: "Video",     value: "VIDEO" },
+        { label: "Carrusel",  value: "CAR"   },
+        { label: "Reel",      value: "REEL"  },
+        { label: "Stories",   value: "STO"   },
     ]},
     { label: "X",         value: "X",  formatos: [
-        { label: "Imagen",     value: "IMG"   },
-        { label: "Video",      value: "VIDEO" },
-        { label: "Galería",    value: "GAL"   },
+        { label: "Imagen",    value: "IMG"   },
+        { label: "Video",     value: "VIDEO" },
+        { label: "Galería",   value: "GAL"   },
     ]},
     { label: "LinkedIn",  value: "LK", formatos: [
-        { label: "Imagen",     value: "IMG"   },
-        { label: "Video",      value: "VIDEO" },
-        { label: "Carrusel",   value: "CAR"   },
+        { label: "Imagen",    value: "IMG"   },
+        { label: "Video",     value: "VIDEO" },
+        { label: "Carrusel",  value: "CAR"   },
     ]},
     { label: "TikTok",    value: "TK", formatos: [
-        { label: "Video",      value: "VIDEO" },
-        { label: "Imagen",     value: "IMG"   },
-        { label: "Stories",    value: "STO"   },
+        { label: "Video",     value: "VIDEO" },
+        { label: "Imagen",    value: "IMG"   },
+        { label: "Stories",   value: "STO"   },
     ]},
     { label: "YouTube",   value: "YT", formatos: [
-        { label: "Video",      value: "VIDEO" },
-        { label: "Thumbnail",  value: "THU"   },
-        { label: "Cover",      value: "COV"   },
+        { label: "Video",     value: "VIDEO" },
+        { label: "Thumbnail", value: "THU"   },
+        { label: "Cover",     value: "COV"   },
     ]},
   ];
 
@@ -261,10 +245,8 @@
     },
   };
 
-  // State: map platformValue → selectedFormatoValue
   const activePlatforms = new Map();
 
-  // Build platform toggle cards
   const grid = document.getElementById("plataformas-grid");
   PLATAFORMAS.forEach(p => {
     const card = document.createElement("div");
@@ -302,44 +284,37 @@
       const plat = PLATAFORMAS.find(p => p.value === platVal);
       const row = document.createElement("div");
       row.className = "plat-format-row";
-
-      // Badge
       const badge = document.createElement("span");
       badge.className = "plat-badge";
       badge.textContent = plat.label;
       row.appendChild(badge);
-
-      // Formato select
       const sel = document.createElement("select");
       sel.style.flex = "1";
       sel.innerHTML = `<option value="">— Formato —</option>` +
-        plat.formatos.map(f => `<option value="${f.value}"${formatoVal === f.value ? " selected" : ""}>${f.label}</option>`).join("");
+        plat.formatos.map(f =>
+          `<option value="${f.value}"${formatoVal === f.value ? " selected" : ""}>${f.label}</option>`
+        ).join("");
       sel.addEventListener("change", () => {
         activePlatforms.set(platVal, sel.value);
         generarSKU();
       });
       row.appendChild(sel);
-
-      // Remove button
       const removeBtn = document.createElement("button");
       removeBtn.className = "remove-btn";
       removeBtn.title = "Quitar plataforma";
       removeBtn.innerHTML = "✕";
       removeBtn.addEventListener("click", () => {
         activePlatforms.delete(platVal);
-        // Uncheck card
         const card = document.querySelector(`.plat-card[data-value="${platVal}"]`);
         if (card) card.classList.remove("active");
         renderFormatoRows();
         generarSKU();
       });
       row.appendChild(removeBtn);
-
       rows.appendChild(row);
     });
   }
 
-  // Cliente → submarca
   document.getElementById("cliente").addEventListener("change", function () {
     const submarcaSelect = document.getElementById("submarca");
     submarcaSelect.innerHTML = '<option value="">—</option>';
@@ -357,6 +332,13 @@
   document.getElementById("submarca").addEventListener("change", generarSKU);
   document.getElementById("fecha").addEventListener("change", generarSKU);
 
+  // ✅ Fecha: DDMMYYYY
+  function formatearFecha(fecha) {
+    if (!fecha) return "";
+    const [y, m, d] = fecha.split("-");
+    return `${d}${m}${y}`;
+  }
+
   function generarSKU() {
     const cliente = document.getElementById("cliente").value;
     const submarca = document.getElementById("submarca").value;
@@ -365,10 +347,10 @@
     resultadoDiv.innerHTML = "";
 
     if (!cliente) return;
-    const fechaFormateada = fecha ? fecha.replace(/-/g, "").slice(2) : "";
+
+    const fechaFormateada = formatearFecha(fecha);
 
     if (activePlatforms.size === 0) {
-      // No platforms: just cliente + submarca + fecha
       const partes = [cliente];
       if (submarca) partes.push(submarca);
       if (fechaFormateada) partes.push(fechaFormateada);
