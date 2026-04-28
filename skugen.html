@@ -325,6 +325,101 @@
       border-top: 1.5px solid var(--purple-light);
     }
 
+    /* ── TOOLTIP INFO ── */
+    .info-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid #aaa;
+      color: #aaa;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: default;
+      position: relative;
+      flex-shrink: 0;
+      font-style: normal;
+    }
+    .info-icon .info-tooltip {
+      position: fixed;
+      background: var(--purple);
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 500;
+      white-space: nowrap;
+      padding: 0.35rem 0.6rem;
+      border-radius: 0.3rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      transform: translateX(-50%) translateY(-100%);
+      margin-top: -8px;
+      z-index: 999;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .info-icon .info-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: var(--purple);
+    }
+
+    /* ── SKU CARPETA ── */
+    .carpeta-section {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1.5px dashed var(--purple-light);
+    }
+    .carpeta-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .carpeta-badge {
+      font-size: 0.62rem;
+      background: var(--purple-light);
+      color: var(--purple);
+      border-radius: 999px;
+      padding: 1px 8px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .sku-chip.carpeta {
+      background: rgba(78,42,106,0.05);
+      border: 1.5px dashed var(--purple-light);
+    }
+
+    /* ── FOOTER MADE WITH ── */
+    .footer-made {
+      text-align: center;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1.5px solid var(--purple-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      color: #bbb;
+      font-size: 0.72rem;
+    }
+    .footer-made img { height: 14px; width: auto; opacity: 0.5; vertical-align: middle; }
+
     @media (max-width: 600px) {
       .bottom-cols { grid-template-columns: 1fr; }
       .row-2, .row-3, .row-4 { grid-template-columns: 1fr; }
@@ -338,7 +433,7 @@
   <div class="header">
     <div>
       <img src="https://brandepica.com/firmas/generadortitulo.png" alt="Generador de SKU" style="height:24px; width:auto; max-width:100%; object-fit:contain; display:block;" />
-      <p style="margin:4px 0 0; font-size:0.72rem; color:#aaa; letter-spacing:0.04em;">Desarrollo Beta</p>
+      <p style="margin:4px 0 0; font-size:0.72rem; color:#aaa; letter-spacing:0.04em;">Versión Beta 1.0</p>
     </div>
     <img src="https://brandepica.com/firmas/LogoBran.png" alt="Brandépica" style="height:22px; width:auto; object-fit:contain; flex-shrink:0;" />
   </div>
@@ -373,7 +468,10 @@
   <!-- FILA ALEATICA: campo custom izquierda (corto) + submarca derecha -->
   <div class="row-2 hidden" id="fila-aleatica">
     <div class="field">
-      <label for="ale-custom">Campaña / Referencia</label>
+      <label for="ale-custom">
+        Campaña / Referencia
+        <span style="font-weight:400; text-transform:none; letter-spacing:0; font-size:0.7rem; color:#aaa;">(Opcional)</span>
+      </label>
       <input type="text" id="ale-custom" placeholder="Ej. EBDI, FLYER…" oninput="renderSKUs()" style="max-width: 160px;" />
     </div>
     <div class="field" id="ale-submarca-wrap">
@@ -381,6 +479,22 @@
       <select id="submarca" onchange="renderSKUs()">
         <option value="">— Selecciona —</option>
       </select>
+    </div>
+  </div>
+
+  <!-- FILA ALEATICA: Horario (solo Aleatica) -->
+  <div class="row-2 hidden" id="fila-aleatica-horario">
+    <div class="field">
+      <label>
+        <span class="info-wrap">
+          Hora de publicación
+          <span style="font-weight:400; text-transform:none; letter-spacing:0; font-size:0.7rem; color:#aaa;">(Opcional)</span>
+          <i class="info-icon" id="info-horario">i
+            <span class="info-tooltip">Horario de 24 hrs, sólo coloca la hora sin minutos. Los meridianos se ponen automáticamente.</span>
+          </i>
+        </span>
+      </label>
+      <input type="text" id="ale-horario" placeholder="Ej. 10, 14, 20…" oninput="onHorarioInput()" style="max-width:120px;" />
     </div>
   </div>
 
@@ -484,8 +598,21 @@
     </div>
   </div>
 
+  <!-- SKU CARPETA DRIVE -->
+  <div class="carpeta-section" id="carpeta-section" style="display:none;">
+    <div class="carpeta-title">
+      📁 SKU de carpeta Drive
+      <span class="carpeta-badge">Sin plataforma · Sin formato</span>
+    </div>
+    <div id="resultado-carpeta"></div>
+  </div>
+
   <!-- FOOTER -->
-  <div class="footer"></div>
+  <div class="footer-made">
+    Hecho con Inteligencia Artificial
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Claude_AI_logo.svg" alt="Claude" title="Claude by Anthropic" />
+    pero con cariñito ❤️
+  </div>
 
 </div>
 
@@ -525,6 +652,9 @@
       {label:"Video",     value:"VIDEO"},
       {label:"Imagen",    value:"IMG"},
       {label:"Stories",   value:"STO"},
+    ]},
+    { value:"WA", label:"WhatsApp", formatos:[
+      {label:"Imagen",    value:"IMG"},
     ]},
     { value:"YT", label:"YouTube", formatos:[
       {label:"Video",     value:"VIDEO"},
@@ -653,6 +783,8 @@
 
     // Reset Aleatica
     document.getElementById("ale-custom").value = "";
+    document.getElementById("ale-horario").value = "";
+    hide("fila-aleatica-horario");
 
     if (!cli) { modoCliente = "GENERAL"; resetPlats("SOCIAL"); renderSKUs(); return; }
 
@@ -670,6 +802,7 @@
     } else if (cli === "ALE" || cli === "AE" || cli === "AC" || cli === "FUND") {
       modoCliente = "ALEATICA";
       show("fila-aleatica");
+      show("fila-aleatica-horario");
       // Poblar submarca dentro de fila-aleatica
       if (SUBMARCAS[cli]) {
         Object.entries(SUBMARCAS[cli]).forEach(([nombre, abr]) => {
@@ -1009,6 +1142,7 @@
     if (active.size === 0) {
       renderChip(buildSKU([]), resultadoDiv);
       renderFormatos();
+      renderCarpeta();
       return;
     }
 
@@ -1031,6 +1165,7 @@
     });
 
     renderFormatos();
+    renderCarpeta();
   }
 
   function renderChip(sku, container) {
@@ -1059,7 +1194,110 @@
     renderSKUs();
   }
 
-  // ── INIT ───────────────────────────────────────────────────────────────────
+  // ── HORARIO ALEATICA ────────────────────────────────────────────────────────
+  function onHorarioInput() {
+    // Solo permite números
+    const el = document.getElementById("ale-horario");
+    el.value = el.value.replace(/[^0-9]/g, "").slice(0, 2);
+    renderSKUs();
+  }
+
+  function getHorario() {
+    const val = document.getElementById("ale-horario").value.trim();
+    if (!val) return "";
+    const h = parseInt(val, 10);
+    if (isNaN(h) || h < 0 || h > 23) return "";
+    return h < 12 ? `${h}am` : `${h}pm`;
+  }
+
+  // ── TOOLTIP INFO ────────────────────────────────────────────────────────────
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".info-icon").forEach(icon => {
+      const tip = icon.querySelector(".info-tooltip");
+      icon.addEventListener("mouseenter", () => {
+        const rect = icon.getBoundingClientRect();
+        tip.style.left = (rect.left + rect.width / 2) + "px";
+        tip.style.top  = (rect.top - 8) + "px";
+        tip.style.opacity = "1";
+      });
+      icon.addEventListener("mouseleave", () => {
+        tip.style.opacity = "0";
+      });
+    });
+  });
+
+  // ── SKU CARPETA DRIVE ───────────────────────────────────────────────────────
+  function buildSKUCarpeta() {
+    const cli    = document.getElementById("cliente").value;
+    const fecha  = document.getElementById("fecha").value;
+    const fechaF = formatearFecha(fecha);
+    if (!cli) return "";
+
+    const parts = [cli];
+
+    if (modoCliente === "ALEATICA") {
+      const custom = document.getElementById("ale-custom").value.trim();
+      if (custom) parts.push(custom);
+      const sub = document.getElementById("submarca").value;
+      if (sub) parts.push(sub);
+      if (fechaF) parts.push(fechaF);
+      const horario = getHorario();
+      if (horario) parts.push(horario);
+
+    } else if (modoCliente === "EVO") {
+      if (fechaF) parts.push(fechaF);
+      const cat   = document.getElementById("evo-categoria").value;
+      const linea = document.getElementById("evo-linea").value;
+      const gram  = getEvoGramaje();
+      if (cat)   parts.push(cat);
+      if (linea) parts.push(linea);
+      if (gram)  parts.push(gram);
+
+    } else if (modoCliente === "VARLIX") {
+      const pilar = document.getElementById("var-pilar").value;
+      const prod  = document.getElementById("var-producto").value;
+      if (pilar) parts.push(pilar);
+      if (prod)  parts.push(prod);
+      if (fechaF) parts.push(fechaF);
+
+    } else {
+      const sub = document.getElementById("submarca-gen").value;
+      if (sub) parts.push(sub);
+      if (fechaF) parts.push(fechaF);
+    }
+
+    return parts.join("-");
+  }
+
+  function renderCarpeta() {
+    const div = document.getElementById("resultado-carpeta");
+    const section = document.getElementById("carpeta-section");
+    const sku = buildSKUCarpeta();
+
+    if (!sku || sku.length < 3) {
+      section.style.display = "none";
+      return;
+    }
+    section.style.display = "block";
+    div.innerHTML = "";
+    const chip = document.createElement("div");
+    chip.className = "sku-chip carpeta";
+    const span = document.createElement("span");
+    span.textContent = sku;
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copiar";
+    btn.onclick = () => {
+      navigator.clipboard.writeText(sku).then(() => {
+        btn.textContent = "¡Copiado!";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("copied"); }, 2000);
+      });
+    };
+    chip.appendChild(span);
+    chip.appendChild(btn);
+    div.appendChild(chip);
+  }
   currentPlats = PLAT_SOCIAL;
   renderPlatGrid();
   renderSKUs();
