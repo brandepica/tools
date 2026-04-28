@@ -1111,6 +1111,11 @@
         if (custom) parts.push(custom);
         const sub = document.getElementById("submarca").value;
         if (sub) parts.push(sub);
+        if (fechaF) parts.push(fechaF);
+        const horario = getHorario();
+        if (horario) parts.push(horario);
+        platTokens.forEach(t => parts.push(t));
+        return parts.join("-");
 
       } else if (modoCliente === "EVO") {
         if (fechaF) parts.push(fechaF);
