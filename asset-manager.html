@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brandépica · Localizador de Assets</title>
+<title>Brandépica · Localizador de SKUs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Climate+Crisis&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -275,7 +275,28 @@ html,body { height:100%; min-height:100vh; font-family:var(--body); background:#
 /* ══ FOOTER DE TARJETA ══ */
 .card-footer { padding:10px 12px 12px; }
 
-/* SKU: verde, mono, tamaño legible */
+/* Path bar — fijo en la parte inferior del panel blanco */
+.path-bar {
+  flex-shrink: 0;
+  display: none;
+  align-items: center; gap: 8px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  background: rgba(45,92,179,.06);
+  border: 1px solid rgba(45,92,179,.15);
+  border-radius: 10px;
+}
+.path-bar.visible { display: flex; }
+.path-bar-label {
+  font-family: var(--body); font-size: 10px; font-weight: 700;
+  color: var(--blue); opacity: .5; text-transform: uppercase;
+  letter-spacing: .08em; flex-shrink: 0;
+}
+.path-bar-text {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--blue); opacity: .7;
+  flex: 1; white-space: normal; word-break: break-all; line-height: 1.5;
+}
 .card-sku {
   font-family:var(--mono); font-size:11px; font-weight:600;
   color:var(--green); margin-bottom:2px;
@@ -284,8 +305,20 @@ html,body { height:100%; min-height:100vh; font-family:var(--body); background:#
 }
 .card-sub {
   font-family:var(--body); font-size:10px;
-  color:rgba(255,255,255,.35); margin-bottom:9px;
+  color:rgba(255,255,255,.35); margin-bottom:6px;
 }
+/* Path copiable */
+.card-path {
+  display:none;
+  font-family:var(--mono); font-size:8px;
+  color:rgba(255,255,255,.28); margin-bottom:8px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  cursor:pointer; transition:color .15s ease;
+  align-items:center; gap:5px;
+}
+.card-path:hover { color:rgba(255,255,255,.6); }
+.card-path svg { flex-shrink:0; }
+body.show-path .card-path { display:flex; }
 
 /* Botones de tarjeta */
 .card-actions { display:flex; gap:6px; }
@@ -359,6 +392,7 @@ html,body { height:100%; min-height:100vh; font-family:var(--body); background:#
           <button class="tipo-pill" onclick="setTipo(this,'psd')">PSD</button>
           <button class="tipo-pill" onclick="setTipo(this,'mp4')">MP4</button>
           <button class="tipo-pill" onclick="setTipo(this,'mov')">MOV</button>
+          <button class="tipo-pill" onclick="setTipo(this,'carpeta')">📁 Carpeta</button>
         </div>
         <div style="margin-top:auto;padding-top:16px;">
           <button class="btn-std" onclick="goB()">Regresar</button>
@@ -399,6 +433,11 @@ html,body { height:100%; min-height:100vh; font-family:var(--body); background:#
       <div class="results-scroll">
         <div class="results-grid" id="results-grid"></div>
       </div>
+      <!-- Path bar -->
+      <div class="path-bar" id="path-bar">
+        <span class="path-bar-label">Ruta</span>
+        <span class="path-bar-text" id="path-bar-text">—</span>
+      </div>
     </div>
 
   </div><!-- /pw -->
@@ -430,7 +469,14 @@ const SVG_JPG=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns
 const SVG_PDF=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#2a0a0a"/><path d="M76 0 L76 20 L56 0 Z" fill="#f05050"/><path d="M56 0 L76 20 L56 20 Z" fill="#b03030"/><text x="38" y="58" font-family="Arial Black,Arial" font-weight="900" font-size="21" fill="#f05050" text-anchor="middle">PDF</text><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="white" text-anchor="middle">PDF</text></svg>`;
 const SVG_PNG=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#0d1020"/><path d="M76 0 L76 20 L56 0 Z" fill="#8080ff"/><path d="M56 0 L76 20 L56 20 Z" fill="#5050cc"/><rect x="11" y="22" width="54" height="38" rx="3" fill="none" stroke="#8080ff" stroke-width="2" opacity=".55"/><path d="M11 52 L28 37 L44 50 L56 42 L65 52" stroke="#8080ff" stroke-width="2.5" fill="none" opacity=".45" stroke-linecap="round"/><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="#8080ff" text-anchor="middle">PNG</text></svg>`;
 
+const SVG_FOLDER=`<svg width="90" height="76" viewBox="0 0 90 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="14" width="90" height="62" rx="7" fill="#4a90d9"/>
+  <path d="M0 21 C0 17 3 14 7 14 L38 14 L45 24 L83 24 C87 24 90 27 90 31 L90 69 C90 73 87 76 83 76 L7 76 C3 76 0 73 0 69 Z" fill="#5ba3e8"/>
+  <rect x="0" y="28" width="90" height="48" rx="7" fill="#6db8f5"/>
+</svg>`;
+
 function getIcon(ext){
+  if(ext==='carpeta') return SVG_FOLDER;
   return {psd:SVG_PSD,ai:SVG_AI,mp4:SVG_MP4,mov:SVG_MP4,jpg:SVG_JPG,jpeg:SVG_JPG,png:SVG_PNG,pdf:SVG_PDF}[ext]||SVG_JPG;
 }
 
@@ -442,22 +488,38 @@ const INACTIVE=new Set(['Yavne','StrongMax','Uprofit','ProtectZone','Conservator
 // ── BASE URL ───────────────────────────────────────────────────────────────
 const BASE = 'https://brandepica.com/assets-prueba/';
 
-// ── ARCHIVOS REALES ────────────────────────────────────────────────────────
+const BASE_PATH = '/Users/artemis/Library/CloudStorage/GoogleDrive-alejandro@brandepica.com/Shared drives';
+
 const SEED = [
-  // NUT-260526-WA — imagen única + editable
-  { id:'r001', name:'NUT-260526-WA.jpg', src: BASE+'NUT-260526-WA.jpg', ext:'jpg' },
-  { id:'r002', name:'NUT-260526-WA.psd', src: BASE+'NUT-260526-WA.psd', ext:'psd' },
+  // NUT-260526-WA — imagen única + editable + carpeta
+  { id:'r001', name:'NUT-260526-WA.jpg', src: BASE+'NUT-260526-WA.jpg', ext:'jpg',
+    path: BASE_PATH+'/20. Nutrical/03. Redes Sociales/Parrillas /2026/Mayo/Editables/NUT-260526-WA' },
+  { id:'r002', name:'NUT-260526-WA.psd', src: BASE+'NUT-260526-WA.psd', ext:'psd',
+    path: BASE_PATH+'/20. Nutrical/03. Redes Sociales/Parrillas /2026/Mayo/Editables/NUT-260526-WA' },
+  { id:'r003', name:'NUT-260526-WA', src: null, ext:'carpeta',
+    path: BASE_PATH+'/20. Nutrical/03. Redes Sociales/Parrillas /2026/Mayo/Editables/NUT-260526-WA' },
 
-  // VAR-SC-05MAY2026-FB-IG-X-CAR — carrusel 4 slides + editable AI
-  { id:'r010', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_A.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_A.jpg', ext:'jpg' },
-  { id:'r011', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_B.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_B.jpg', ext:'jpg' },
-  { id:'r012', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_C.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_C.jpg', ext:'jpg' },
-  { id:'r013', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_D.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_D.jpg', ext:'jpg' },
-  { id:'r014', name:'VAR-SC-05MAY2026-FB-IG-X-CAR.ai',    src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR.ai',    ext:'ai'  },
+  // VAR-SC-05MAY2026-FB-IG-X-CAR — carrusel 4 slides + editable AI + carpeta
+  { id:'r010', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_A.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_A.jpg', ext:'jpg',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
+  { id:'r011', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_B.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_B.jpg', ext:'jpg',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
+  { id:'r012', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_C.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_C.jpg', ext:'jpg',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
+  { id:'r013', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_D.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_D.jpg', ext:'jpg',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
+  { id:'r014', name:'VAR-SC-05MAY2026-FB-IG-X-CAR.ai', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR.ai', ext:'ai',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
+  { id:'r015', name:'VAR-SC-05MAY2026-FB-IG-X-CAR', src: null, ext:'carpeta',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
 
-  // VAR-SC-LK-CAR — editable AI + PDF
-  { id:'r020', name:'VAR-SC-05MAY2026-LK-CAR.ai',  src: BASE+'VAR-SC-05MAY2026-LK-CAR.ai',  ext:'ai'  },
-  { id:'r021', name:'VAR-SC-05MAY2026-LK-CAR.pdf', src: BASE+'VAR-SC-05MAY2026-LK-CAR.pdf', ext:'pdf' },
+  // VAR-SC-LK-CAR — editable AI + PDF + carpeta
+  { id:'r020', name:'VAR-SC-05MAY2026-LK-CAR.ai',  src: BASE+'VAR-SC-05MAY2026-LK-CAR.ai',  ext:'ai',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
+  { id:'r021', name:'VAR-SC-05MAY2026-LK-CAR.pdf', src: BASE+'VAR-SC-05MAY2026-LK-CAR.pdf', ext:'pdf',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
+  { id:'r022', name:'VAR-SC-05MAY2026-LK-CAR', src: null, ext:'carpeta',
+    path: BASE_PATH+'/07. Varlix/02. Comunicación digital/03. Redes sociales/2026/5. MAYO/EDITABLES/VAR-SC-05MAY2026-FB-IG-X-CAR' },
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
@@ -495,12 +557,12 @@ function getExt(name){return(name.split('.').pop()||'').toLowerCase();}
 function rebuildGrouped(){
   grouped={};
   allFiles.forEach(f=>{
-    const base=skuBase(f.name),ext=getExt(f.name);
-    // JPGs y PNGs del mismo SKU base van juntos en un carrusel
-    // Editables (ai, psd, pdf) van en tarjeta separada por tipo
+    const base=skuBase(f.name),ext=f.ext||getExt(f.name);
+    const isCarpeta=ext==='carpeta';
     const isImage=['jpg','jpeg','png'].includes(ext);
-    const key=isImage ? base+'::img' : base+'::'+ext;
-    if(!grouped[key])grouped[key]={sku:base,files:[],ext:isImage?'jpg':ext};
+    const key=isCarpeta?base+'::carpeta':isImage?base+'::img':base+'::'+ext;
+    const groupExt=isCarpeta?'carpeta':isImage?'jpg':ext;
+    if(!grouped[key])grouped[key]={sku:base,files:[],ext:groupExt};
     grouped[key].files.push({...f,ext,skuFull:f.name.replace(/\.[^.]+$/,'').toUpperCase()});
   });
   Object.values(grouped).forEach(g=>g.files.sort((a,b)=>a.skuFull.localeCompare(b.skuFull)));
@@ -547,12 +609,29 @@ function setTipo(el,f){
   activeFilter=f;
   document.querySelectorAll('.tipo-pill').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
+  document.body.classList.toggle('show-path', f!=='all');
+  // Ocultar path bar al cambiar filtro hasta nueva búsqueda
+  updatePathBar(null);
   if(lastResults.length>0||document.getElementById('sku-input').value.trim())applyFilter();
+}
+
+function updatePathBar(path){
+  const bar = document.getElementById('path-bar');
+  const txt = document.getElementById('path-bar-text');
+  if(!bar||!txt) return;
+  if(path && activeFilter!=='all'){
+    // Mostrar solo desde "Shared drives" en adelante
+    const idx = path.indexOf('Shared drives');
+    const display = idx !== -1 ? path.substring(idx) : path;
+    txt.textContent = display;
+    bar.classList.add('visible');
+  } else {
+    bar.classList.remove('visible');
+  }
 }
 function applyFilter(){
   let r=[...lastResults];
   if(activeFilter!=='all'){
-    // jpg/png filtran el grupo de imágenes (ext='jpg')
     const imgTypes=['jpg','jpeg','png'];
     if(imgTypes.includes(activeFilter)){
       r=r.filter(g=>g.ext==='jpg');
@@ -571,6 +650,7 @@ function renderResults(results){
     meta.innerHTML=lastResults.length>0
       ?`<span>Sin archivos de tipo <strong style="color:var(--blue)">${activeFilter.toUpperCase()}</strong></span>`
       :'<span>Sin resultados</span>';
+    updatePathBar(null);
     return;
   }
   const n=results.length;
@@ -581,6 +661,9 @@ function renderResults(results){
     const lbl=document.getElementById(`lbl-${i}`);
     if(lbl)lbl.textContent=g.files[0].skuFull;
   });
+  // Mostrar path del primer resultado si hay filtro activo
+  const firstPath = results[0]?.files[0]?.path;
+  updatePathBar(firstPath||null);
 }
 
 function buildCard(g,idx){
@@ -628,6 +711,12 @@ function buildCard(g,idx){
       </div>
     </div>`;
   return div;
+}
+
+function copyPath(path){
+  if(!path) return;
+  navigator.clipboard.writeText(path).catch(()=>{});
+  toast('Path copiado ✓');
 }
 
 function getCS(id){if(!cState[id])cState[id]={cur:0};return cState[id];}
