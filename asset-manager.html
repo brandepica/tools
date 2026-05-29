@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brandépica · Localizador de Assets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Climate+Crisis&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green:    #c8f000;
+  --blue:     #2d5cb3;
+  --blue-btn: rgba(0,0,255,0.60);
+  --cyan:     #7df0ff;
+  --white:    #ffffff;
+  --dark:     #1a1a1a;
+  --radius:   999px;
+  --mono: 'DM Mono','Lucida Console','Lucida Sans Typewriter',monospace;
+  --body: system-ui,-apple-system,sans-serif;
+  --display: 'Climate Crisis',cursive;
+  --dur: .72s;
+  --ease: cubic-bezier(.77,0,.18,1);
+}
+
+html,body { height:100%; min-height:100vh; font-family:var(--body); background:#e8eaf0; overflow:hidden; }
+
+.bg {
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse at 15% 10%, #2d5cb3 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 5%,  #7df0ff 0%, transparent 35%),
+    radial-gradient(ellipse at 5%  90%, #c8f000 0%, transparent 40%),
+    radial-gradient(ellipse at 85% 85%,#e8eaf0  0%, transparent 40%),
+    #dde0ea;
+}
+
+.wrapper {
+  position:relative; z-index:1;
+  min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+}
+
+/* ══ SHELL ══ */
+.shell {
+  width:100%; max-width:1080px; height:590px;
+  border-radius:28px;
+  box-shadow:0 24px 70px rgba(0,0,0,.22),0 4px 16px rgba(0,0,0,.12);
+  position:relative; overflow:hidden;
+  background:var(--white);
+}
+
+/* ══ PANEL VERDE ══ */
+.pv {
+  position:absolute; top:0; bottom:0; left:0; width:50%;
+  background:var(--green); border-radius:28px 0 0 28px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:40px 36px; z-index:10; overflow:hidden;
+  transition: left var(--dur) var(--ease), width var(--dur) var(--ease),
+              border-radius var(--dur) var(--ease), padding var(--dur) var(--ease);
+}
+.shell.state-b .pv {
+  left:62%; width:38%; border-radius:0 28px 28px 0;
+  align-items:center; justify-content:center; padding:36px 28px;
+}
+.shell.state-c .pv {
+  left:0; width:34%; border-radius:28px 0 0 28px;
+  align-items:flex-start; justify-content:flex-start; padding:28px 20px;
+}
+
+/* ══ PANEL BLANCO ══ */
+.pw {
+  position:absolute; top:0; bottom:0; left:50%; width:50%;
+  background:var(--white); border-radius:0 28px 28px 0;
+  display:flex; flex-direction:column; padding:36px 36px 28px;
+  z-index:5; overflow:hidden;
+  transition: left var(--dur) var(--ease), width var(--dur) var(--ease),
+              border-radius var(--dur) var(--ease), padding var(--dur) var(--ease);
+}
+.shell.state-b .pw { left:0; width:62%; border-radius:28px 0 0 28px; padding:32px 32px 24px; }
+.shell.state-c .pw { left:34%; width:66%; border-radius:0 28px 28px 0; padding:20px 20px 16px 18px; }
+
+/* ══ INNERS ══ */
+.pv-inner,.pw-inner { width:100%; flex:1; min-height:0; display:none; flex-direction:column; }
+.pv-inner.on,.pw-inner.on { display:flex; animation:fadeUp .38s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+
+/* ══ HERO ══ */
+.pv-eyebrow {
+  font-family:var(--body); font-weight:700; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--blue); margin-bottom:18px; text-align:center;
+}
+.pv-title {
+  font-family:var(--display); font-size:clamp(22px,2.8vw,36px);
+  letter-spacing:.06em; color:var(--blue); line-height:1.05; margin-bottom:34px; text-align:center;
+}
+.pv-sub { font-size:13px; font-weight:500; color:var(--blue); margin-bottom:22px; opacity:.8; text-align:center; }
+
+/* ══ PANEL C — búsqueda ══ */
+.pv-c-content { display:flex; flex-direction:column; height:100%; }
+.pv-client-name {
+  font-family:var(--body); font-weight:800; font-size:15px;
+  letter-spacing:.03em; color:var(--blue); margin-bottom:14px;
+}
+.search-wrap {
+  display:flex; align-items:center;
+  background:rgba(255,255,255,.78); border:1.5px solid rgba(45,92,179,.2);
+  border-radius:10px; padding:7px 11px; gap:7px; margin-bottom:10px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.search-wrap:focus-within { border-color:var(--blue); box-shadow:0 0 0 3px rgba(45,92,179,.12); }
+.search-wrap svg { color:var(--blue); flex-shrink:0; opacity:.55; }
+#sku-input {
+  flex:1; background:none; border:none; outline:none;
+  font-family:var(--mono); font-size:12px; color:var(--blue);
+}
+#sku-input::placeholder { color:rgba(45,92,179,.38); }
+
+.tipo-label {
+  font-family:var(--body); font-weight:700; font-size:9px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--blue); margin-bottom:6px; opacity:.7;
+}
+.tipo-pills { display:flex; flex-wrap:wrap; gap:4px; }
+.tipo-pill {
+  font-family:var(--body); font-size:10px; font-weight:600; padding:4px 10px;
+  border-radius:var(--radius); border:1.5px solid rgba(45,92,179,.3);
+  background:transparent; color:var(--blue); cursor:pointer; transition:all .16s ease;
+}
+.tipo-pill:hover { border-color:var(--blue); }
+.tipo-pill.active { background:var(--blue); border-color:var(--blue); color:white; }
+
+/* ══ BOTONES ══ */
+.btn-main {
+  background:var(--blue-btn); color:white; border:none; border-radius:var(--radius);
+  font-family:var(--body); font-weight:700; font-size:15px; padding:13px 38px;
+  cursor:pointer; backdrop-filter:blur(4px);
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+}
+.btn-main:hover { transform:scale(1.05); filter:brightness(1.15); }
+
+.btn-std {
+  background:var(--blue-btn); color:white; border:none; border-radius:var(--radius);
+  font-family:var(--body); font-weight:700; font-size:13px; padding:10px 26px;
+  cursor:pointer; backdrop-filter:blur(4px);
+  transition:all .22s cubic-bezier(.34,1.56,.64,1); white-space:nowrap;
+}
+.btn-std:hover { transform:scale(1.04); filter:brightness(1.15); }
+.btn-std.full { width:100%; }
+
+/* ══ CLIENTES ══ */
+.pw-b-title {
+  font-family:var(--display); font-size:clamp(20px,2.4vw,28px);
+  letter-spacing:.07em; color:var(--blue); margin-bottom:16px; flex-shrink:0;
+}
+.clients-grid {
+  display:grid; grid-template-columns:repeat(3,auto);
+  justify-content:start; gap:7px 9px;
+  overflow-y:auto; align-content:start;
+  flex:1; min-height:0; margin-bottom:14px;
+  scrollbar-width:thin; scrollbar-color:rgba(45,92,179,.15) transparent;
+}
+.clients-grid::-webkit-scrollbar { width:4px; }
+.clients-grid::-webkit-scrollbar-thumb { background:rgba(45,92,179,.2); border-radius:2px; }
+.client-btn {
+  background:transparent; border:1.5px solid var(--cyan); border-radius:var(--radius);
+  font-family:var(--body); font-size:12px; font-weight:500; color:var(--blue);
+  padding:6px 16px; cursor:pointer; text-align:center;
+  transition:all .16s ease; white-space:nowrap; width:fit-content;
+}
+.client-btn:hover { background:rgba(125,240,255,.18); border-color:var(--blue); }
+.client-btn.active { background:var(--cyan); border-color:var(--cyan); color:var(--blue); font-weight:700; }
+.client-btn.inactive {
+  border-color:rgba(0,0,0,.12);
+  color:rgba(0,0,0,.28);
+  cursor:not-allowed;
+  background:rgba(0,0,0,.04);
+}
+.pw-b-footer { display:flex; justify-content:flex-start; flex-shrink:0; }
+
+/* ══ RESULTADOS ══ */
+.pw-c-header { display:flex; align-items:center; margin-bottom:12px; flex-shrink:0; }
+.results-meta { font-family:var(--body); font-weight:600; font-size:13px; color:var(--blue); flex:1; }
+.results-meta span { color:rgba(45,92,179,.5); font-weight:400; }
+
+.results-scroll {
+  flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-right:6px;
+  scrollbar-width:thin; scrollbar-color:rgba(45,92,179,.2) transparent;
+}
+.results-scroll::-webkit-scrollbar { width:5px; }
+.results-scroll::-webkit-scrollbar-thumb { background:rgba(45,92,179,.22); border-radius:3px; }
+
+/* auto-fill, tarjetas cuadradas 1:1 */
+.results-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+  gap:12px;
+  padding-bottom:4px;
+}
+
+/* ══ TARJETA ══ */
+.asset-card {
+  background:var(--dark); border-radius:14px; overflow:hidden;
+  animation:cin .35s ease both;
+  transition:transform .22s cubic-bezier(.25,.46,.45,.94),box-shadow .22s;
+}
+@keyframes cin { from{opacity:0;transform:translateY(8px) scale(.97)} to{opacity:1;transform:none} }
+.asset-card:hover { transform:translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,.45); }
+.results-grid .asset-card:nth-child(1){animation-delay:.04s}
+.results-grid .asset-card:nth-child(2){animation-delay:.08s}
+.results-grid .asset-card:nth-child(3){animation-delay:.12s}
+.results-grid .asset-card:nth-child(4){animation-delay:.16s}
+
+/* Preview: 1:1 cuadrado */
+.card-preview {
+  position:relative; aspect-ratio:1/1;
+  overflow:hidden; background:#111;
+  display:flex; align-items:center; justify-content:center;
+}
+.carousel-track { position:absolute; top:0; left:0; right:0; bottom:0; }
+.carousel-slide {
+  position:absolute; top:0; left:0; right:0; bottom:0;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  opacity:0; transition:opacity .35s ease; pointer-events:none;
+}
+.carousel-slide.active { opacity:1; pointer-events:auto; }
+.carousel-slide img { width:100%; height:100%; object-fit:contain; background:#111; display:block; }
+.icon-preview { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#111; }
+
+/* Badge de formato */
+.fmt-badge {
+  position:absolute; top:8px; left:8px;
+  background:var(--green); color:var(--blue);
+  font-family:var(--body); font-weight:800; font-size:9px;
+  letter-spacing:.05em; text-transform:uppercase;
+  padding:3px 8px; border-radius:5px; z-index:5;
+}
+.slide-count {
+  position:absolute; top:8px; right:8px;
+  background:rgba(0,0,0,.7); backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.15); color:white;
+  font-family:var(--mono); font-size:9px; font-weight:600;
+  padding:2px 7px; border-radius:100px; z-index:5;
+}
+
+/* Flechas: grandes, círculo verde, flecha negra */
+.carr {
+  position:absolute; top:50%; transform:translateY(-50%);
+  background:var(--green); border:none; color:#000;
+  border-radius:50%; width:32px; height:32px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; opacity:0;
+  transition:opacity .18s,transform .18s;
+  z-index:10; font-size:17px; font-weight:900; user-select:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
+.card-preview:hover .carr { opacity:1; }
+.carr:hover { transform:translateY(-50%) scale(1.12); }
+.carr.prev { left:8px; }
+.carr.next { right:8px; }
+.carousel-dots {
+  position:absolute; bottom:7px; left:0; right:0;
+  display:flex; justify-content:center; gap:4px; z-index:10;
+}
+.cdot {
+  width:5px; height:5px; border-radius:50%;
+  background:rgba(255,255,255,.3); cursor:pointer;
+  transition:all .2s; border:none; padding:0;
+}
+.cdot.on { background:var(--green); width:14px; border-radius:3px; }
+
+/* ══ FOOTER DE TARJETA ══ */
+.card-footer { padding:10px 12px 12px; }
+
+/* SKU: verde, mono, tamaño legible */
+.card-sku {
+  font-family:var(--mono); font-size:11px; font-weight:600;
+  color:var(--green); margin-bottom:2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  letter-spacing:.02em;
+}
+.card-sub {
+  font-family:var(--body); font-size:10px;
+  color:rgba(255,255,255,.35); margin-bottom:9px;
+}
+
+/* Botones de tarjeta */
+.card-actions { display:flex; gap:6px; }
+.card-btn {
+  flex:1; border-radius:8px;
+  font-family:var(--body); font-size:11px; font-weight:700;
+  padding:8px 6px; cursor:pointer; border:none;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  transition:all .18s cubic-bezier(.34,1.56,.64,1); white-space:nowrap;
+}
+.card-btn-drive { background:rgba(255,255,255,.1); color:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.14); }
+.card-btn-drive:hover { background:rgba(255,255,255,.2); }
+.card-btn-dl { background:var(--green); color:#000; font-weight:800; }
+.card-btn-dl:hover { transform:scale(1.04); box-shadow:0 4px 14px rgba(200,240,0,.35); }
+
+/* ══ TOAST ══ */
+.toast {
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:#1a1a1a; color:white; font-family:var(--mono); font-size:11px;
+  padding:9px 18px; border-radius:10px; border:1px solid rgba(200,240,0,.3);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  z-index:999; white-space:nowrap; display:flex; align-items:center; gap:7px;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast-dot { color:var(--green); }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="wrapper">
+<div class="shell" id="shell">
+
+  <!-- ══ PANEL VERDE ══ -->
+  <div class="pv" id="pv">
+
+    <!-- A: Hero -->
+    <div class="pv-inner on" id="pv-a">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;">
+        <div class="pv-eyebrow">Localizador de archivos con SKU</div>
+        <div class="pv-title">Busca por SKU,<br>descarga al<br>momento</div>
+        <div class="pv-sub">Elige un cliente para comenzar</div>
+        <button class="btn-main" onclick="goB()">Comienza aquí</button>
+      </div>
+    </div>
+
+    <!-- B: vacío, solo verde a la derecha -->
+    <div class="pv-inner" id="pv-b"></div>
+
+    <!-- C: Búsqueda -->
+    <div class="pv-inner" id="pv-c">
+      <div class="pv-c-content">
+        <div class="pv-client-name" id="client-label">—</div>
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input id="sku-input" type="text" placeholder="SKU ej. VAR-SC-05MAY">
+        </div>
+        <button class="btn-std full" onclick="doSearch()" style="margin-bottom:14px;">Buscar</button>
+        <div class="tipo-label">Tipo</div>
+        <div class="tipo-pills" id="tipo-pills">
+          <button class="tipo-pill active" onclick="setTipo(this,'all')">Todos</button>
+          <button class="tipo-pill" onclick="setTipo(this,'jpg')">JPG</button>
+          <button class="tipo-pill" onclick="setTipo(this,'png')">PNG</button>
+          <button class="tipo-pill" onclick="setTipo(this,'pdf')">PDF</button>
+          <button class="tipo-pill" onclick="setTipo(this,'ai')">AI</button>
+          <button class="tipo-pill" onclick="setTipo(this,'psd')">PSD</button>
+          <button class="tipo-pill" onclick="setTipo(this,'mp4')">MP4</button>
+          <button class="tipo-pill" onclick="setTipo(this,'mov')">MOV</button>
+        </div>
+        <div style="margin-top:auto;padding-top:16px;">
+          <button class="btn-std" onclick="goB()">Regresar</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pv -->
+
+  <!-- ══ PANEL BLANCO ══ -->
+  <div class="pw" id="pw">
+
+    <!-- A: vacío -->
+    <div class="pw-inner on" id="pw-a">
+      <div style="flex:1;"></div>
+      <div style="display:flex; justify-content:flex-end; padding:0 28px 28px 0;">
+        <img src="https://brandepica.com/firmas/LogoBran.png"
+             alt="Brandépica"
+             style="height:36px; width:auto; object-fit:contain; opacity:.85;">
+      </div>
+    </div>
+
+    <!-- B: clientes -->
+    <div class="pw-inner" id="pw-b">
+      <div class="pw-b-title">Elige un cliente</div>
+      <div style="font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:rgba(45,92,179,.55);margin-bottom:14px;margin-top:-10px;font-weight:400;">Unidades Drive con SKU's activos</div>
+      <div class="clients-grid" id="clients-grid"></div>
+      <div class="pw-b-footer">
+        <button class="btn-std" onclick="goA()">Regresar</button>
+      </div>
+    </div>
+
+    <!-- C: resultados -->
+    <div class="pw-inner" id="pw-c">
+      <div class="pw-c-header">
+        <div class="results-meta" id="results-meta"><span>Busca un SKU para comenzar</span></div>
+      </div>
+      <div class="results-scroll">
+        <div class="results-grid" id="results-grid"></div>
+      </div>
+    </div>
+
+  </div><!-- /pw -->
+</div>
+</div>
+
+<div class="toast" id="toast"><span class="toast-dot">✓</span><span id="toast-msg">OK</span></div>
+
+<div style="
+  position:fixed; bottom:10px; left:0; right:0; z-index:50;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:7px 0;
+  color:#4e2a6a; font-family:system-ui,-apple-system,sans-serif; font-size:11px; font-weight:500;
+  pointer-events:none; letter-spacing:.01em;
+">
+  Hecho con Inteligencia Artificial
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Claude_AI_logo.svg"
+       alt="Claude" title="Claude by Anthropic"
+       style="height:13px;width:auto;opacity:0.55;vertical-align:middle;">
+  pero con cariñito ❤️
+</div>
+
+<script>
+// ── ICONOS ─────────────────────────────────────────────────────────────────
+const SVG_PSD=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#1B2A3B"/><path d="M76 0 L76 20 L56 0 Z" fill="#31A8FF"/><path d="M56 0 L76 20 L56 20 Z" fill="#0A6EBD"/><text x="38" y="56" font-family="Arial Black,Arial" font-weight="900" font-size="24" fill="#31A8FF" text-anchor="middle">Ps</text><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="white" text-anchor="middle">PSD</text></svg>`;
+const SVG_AI=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#2B0A00"/><path d="M76 0 L76 20 L56 0 Z" fill="#FF9A00"/><path d="M56 0 L76 20 L56 20 Z" fill="#CC7A00"/><text x="38" y="56" font-family="Arial Black,Arial" font-weight="900" font-size="24" fill="#FF9A00" text-anchor="middle">Ai</text><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="white" text-anchor="middle">AI</text></svg>`;
+const SVG_MP4=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#e0e0e0"/><path d="M76 0 L76 20 L56 0 Z" fill="#bbb"/><path d="M56 0 L76 20 L56 20 Z" fill="#999"/><rect x="12" y="30" width="28" height="22" rx="3" fill="none" stroke="#999" stroke-width="2.5"/><path d="M40 36 L56 31 L56 47 L40 42 Z" fill="#999"/><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="#777" text-anchor="middle">MP4</text></svg>`;
+const SVG_JPG=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#0d1a10"/><path d="M76 0 L76 20 L56 0 Z" fill="#4af0c8"/><path d="M56 0 L76 20 L56 20 Z" fill="#2ab89a"/><rect x="11" y="22" width="54" height="38" rx="3" fill="none" stroke="#4af0c8" stroke-width="2" opacity=".6"/><circle cx="24" cy="34" r="6" fill="#4af0c8" opacity=".45"/><path d="M11 52 L30 38 L44 50 L56 42 L65 52" stroke="#4af0c8" stroke-width="2.5" fill="none" opacity=".5" stroke-linecap="round"/><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="#4af0c8" text-anchor="middle">JPG</text></svg>`;
+const SVG_PDF=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#2a0a0a"/><path d="M76 0 L76 20 L56 0 Z" fill="#f05050"/><path d="M56 0 L76 20 L56 20 Z" fill="#b03030"/><text x="38" y="58" font-family="Arial Black,Arial" font-weight="900" font-size="21" fill="#f05050" text-anchor="middle">PDF</text><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="white" text-anchor="middle">PDF</text></svg>`;
+const SVG_PNG=`<svg width="76" height="90" viewBox="0 0 76 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="90" rx="9" fill="#0d1020"/><path d="M76 0 L76 20 L56 0 Z" fill="#8080ff"/><path d="M56 0 L76 20 L56 20 Z" fill="#5050cc"/><rect x="11" y="22" width="54" height="38" rx="3" fill="none" stroke="#8080ff" stroke-width="2" opacity=".55"/><path d="M11 52 L28 37 L44 50 L56 42 L65 52" stroke="#8080ff" stroke-width="2.5" fill="none" opacity=".45" stroke-linecap="round"/><text x="38" y="78" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="#8080ff" text-anchor="middle">PNG</text></svg>`;
+
+function getIcon(ext){
+  return {psd:SVG_PSD,ai:SVG_AI,mp4:SVG_MP4,mov:SVG_MP4,jpg:SVG_JPG,jpeg:SVG_JPG,png:SVG_PNG,pdf:SVG_PDF}[ext]||SVG_JPG;
+}
+
+// ── CLIENTES ───────────────────────────────────────────────────────────────
+const CLIENTS=['Brandépica','Aleatica','Evolution','Engen Capital','Air Community','Varlix','Daikin','Yavne','TeleVía','CIVyL','StrongMax','Uprofit','ProtectZone','Conservatorio','Scentkey','Nutrical','Poster People','SAASCAEM','Nicole Weil','Comfort Loop','Rompe Corazón','Body Republic','Hogarity'];
+
+const INACTIVE=new Set(['Yavne','StrongMax','Uprofit','ProtectZone','Conservatorio','Scentkey','Poster People','SAASCAEM','Nicole Weil','Comfort Loop','Rompe Corazón','Body Republic','Hogarity']);
+
+// ── BASE URL ───────────────────────────────────────────────────────────────
+const BASE = 'https://brandepica.com/assets-prueba/';
+
+// ── ARCHIVOS REALES ────────────────────────────────────────────────────────
+const SEED = [
+  // NUT-260526-WA — imagen única + editable
+  { id:'r001', name:'NUT-260526-WA.jpg', src: BASE+'NUT-260526-WA.jpg', ext:'jpg' },
+  { id:'r002', name:'NUT-260526-WA.psd', src: BASE+'NUT-260526-WA.psd', ext:'psd' },
+
+  // VAR-SC-05MAY2026-FB-IG-X-CAR — carrusel 4 slides + editable AI
+  { id:'r010', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_A.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_A.jpg', ext:'jpg' },
+  { id:'r011', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_B.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_B.jpg', ext:'jpg' },
+  { id:'r012', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_C.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_C.jpg', ext:'jpg' },
+  { id:'r013', name:'VAR-SC-05MAY2026-FB-IG-X-CAR_D.jpg', src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR_D.jpg', ext:'jpg' },
+  { id:'r014', name:'VAR-SC-05MAY2026-FB-IG-X-CAR.ai',    src: BASE+'VAR-SC-05MAY2026-FB-IG-X-CAR.ai',    ext:'ai'  },
+
+  // VAR-SC-LK-CAR — editable AI + PDF
+  { id:'r020', name:'VAR-SC-05MAY2026-LK-CAR.ai',  src: BASE+'VAR-SC-05MAY2026-LK-CAR.ai',  ext:'ai'  },
+  { id:'r021', name:'VAR-SC-05MAY2026-LK-CAR.pdf', src: BASE+'VAR-SC-05MAY2026-LK-CAR.pdf', ext:'pdf' },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let allFiles=[...SEED],grouped={},lastResults=[],activeClient=null,activeFilter='all',state='A';
+const cState={},rendered=[];
+
+window.addEventListener('load',()=>{buildClients();rebuildGrouped();});
+
+function buildClients(){
+  const g=document.getElementById('clients-grid');
+  CLIENTS.forEach(c=>{
+    const inactive=INACTIVE.has(c);
+    const b=document.createElement('button');
+    b.className='client-btn' + (inactive?' inactive':'');
+    b.textContent=c;
+    if(inactive){
+      b.disabled=true;
+      b.title='Este Drive no tiene SKUs activos';
+    } else {
+      b.onclick=()=>selectClient(c,b);
+    }
+    g.appendChild(b);
+  });
+}
+function selectClient(name,el){
+  activeClient=name;
+  document.querySelectorAll('.client-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  setTimeout(()=>goC(),200);
+}
+
+function skuBase(name){return name.replace(/\.[^.]+$/,'').toUpperCase().replace(/[_-][A-Z]$/,'');}
+function getExt(name){return(name.split('.').pop()||'').toLowerCase();}
+
+function rebuildGrouped(){
+  grouped={};
+  allFiles.forEach(f=>{
+    const base=skuBase(f.name),ext=getExt(f.name);
+    // JPGs y PNGs del mismo SKU base van juntos en un carrusel
+    // Editables (ai, psd, pdf) van en tarjeta separada por tipo
+    const isImage=['jpg','jpeg','png'].includes(ext);
+    const key=isImage ? base+'::img' : base+'::'+ext;
+    if(!grouped[key])grouped[key]={sku:base,files:[],ext:isImage?'jpg':ext};
+    grouped[key].files.push({...f,ext,skuFull:f.name.replace(/\.[^.]+$/,'').toUpperCase()});
+  });
+  Object.values(grouped).forEach(g=>g.files.sort((a,b)=>a.skuFull.localeCompare(b.skuFull)));
+}
+
+function setInner(pvId,pwId){
+  ['pv-a','pv-b','pv-c'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('on');el.style.display='none';});
+  ['pw-a','pw-b','pw-c'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('on');el.style.display='none';});
+  const pv=document.getElementById(pvId);pv.style.display='flex';pv.classList.add('on');
+  const pw=document.getElementById(pwId);pw.style.display='flex';pw.classList.add('on');
+}
+function goA(){
+  document.getElementById('shell').className='shell';
+  setInner('pv-a','pw-a');state='A';activeClient=null;
+  document.querySelectorAll('.client-btn').forEach(b=>b.classList.remove('active'));
+  clearSearch();
+}
+function goB(){
+  document.getElementById('shell').className='shell state-b';
+  setInner('pv-b','pw-b');state='B';clearSearch();
+}
+function goC(){
+  document.getElementById('shell').className='shell state-c';
+  setInner('pv-c','pw-c');
+  document.getElementById('client-label').textContent=activeClient;
+  state='C';
+}
+function clearSearch(){
+  const inp=document.getElementById('sku-input');if(inp)inp.value='';
+  const grid=document.getElementById('results-grid');if(grid)grid.innerHTML='';
+  const meta=document.getElementById('results-meta');
+  if(meta)meta.innerHTML='<span>Busca un SKU para comenzar</span>';
+  lastResults=[];activeFilter='all';
+  document.querySelectorAll('.tipo-pill').forEach(p=>p.classList.remove('active'));
+  const first=document.querySelector('.tipo-pill');if(first)first.classList.add('active');
+}
+
+function doSearch(){
+  const q=document.getElementById('sku-input').value.trim().toUpperCase();
+  lastResults=Object.values(grouped).filter(g=>!q||g.sku.includes(q)||g.files.some(f=>f.skuFull.includes(q)));
+  applyFilter();
+}
+function setTipo(el,f){
+  activeFilter=f;
+  document.querySelectorAll('.tipo-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  if(lastResults.length>0||document.getElementById('sku-input').value.trim())applyFilter();
+}
+function applyFilter(){
+  let r=[...lastResults];
+  if(activeFilter!=='all'){
+    // jpg/png filtran el grupo de imágenes (ext='jpg')
+    const imgTypes=['jpg','jpeg','png'];
+    if(imgTypes.includes(activeFilter)){
+      r=r.filter(g=>g.ext==='jpg');
+    } else {
+      r=r.filter(g=>g.ext===activeFilter);
+    }
+  }
+  renderResults(r);
+}
+
+function renderResults(results){
+  const grid=document.getElementById('results-grid');
+  const meta=document.getElementById('results-meta');
+  rendered.length=0;grid.innerHTML='';
+  if(!results.length){
+    meta.innerHTML=lastResults.length>0
+      ?`<span>Sin archivos de tipo <strong style="color:var(--blue)">${activeFilter.toUpperCase()}</strong></span>`
+      :'<span>Sin resultados</span>';
+    return;
+  }
+  const n=results.length;
+  meta.innerHTML=`<strong>${n}</strong> SKU${n!==1?'s':''} encontrado${n!==1?'s':''}`;
+  results.forEach((g,i)=>{
+    rendered[i]=g;
+    grid.appendChild(buildCard(g,i));
+    const lbl=document.getElementById(`lbl-${i}`);
+    if(lbl)lbl.textContent=g.files[0].skuFull;
+  });
+}
+
+function buildCard(g,idx){
+  const div=document.createElement('div');
+  div.className='asset-card';
+  const isC=g.files.length>1,mf=g.files[0];
+  const slidesHtml=g.files.map((f,i)=>{
+    const isImg=['jpg','jpeg','png'].includes(f.ext);
+    let inner;
+    if(isImg){
+      inner=`<img src="${f.src}" alt="${f.skuFull}">`;
+    }else{
+      inner=`<div class="icon-preview">${getIcon(f.ext)}</div>`;
+    }
+    return `<div class="carousel-slide${i===0?' active':''}">${inner}</div>`;
+  }).join('');
+  const dotsHtml=isC?g.files.map((_,i)=>`<button class="cdot ${i===0?'on':''}" onclick="goTo(event,${idx},${i})"></button>`).join(''):'';
+  // Para grupos de imágenes, el badge muestra el ext del primer archivo real
+  const badgeExt = mf.ext.toUpperCase();
+  const subLabel = g.files.length > 1
+    ? `${g.files.length} archivos`
+    : mf.ext.toUpperCase();
+
+  div.innerHTML=`
+    <div class="card-preview" id="prev-${idx}">
+      <div class="carousel-track" id="ct-${idx}">${slidesHtml}</div>
+      <div class="fmt-badge">${badgeExt}</div>
+      ${isC?`<div class="slide-count">${g.files.length} slides</div>`:''}
+      ${isC?`<button class="carr prev" onclick="shift(event,${idx},-1)">‹</button>
+             <button class="carr next" onclick="shift(event,${idx},1)">›</button>
+             <div class="carousel-dots">${dotsHtml}</div>`:''}
+    </div>
+    <div class="card-footer">
+      <div class="card-sku" id="lbl-${idx}">${g.sku}</div>
+      <div class="card-sub">${subLabel}</div>
+      <div class="card-actions">
+        <button class="card-btn card-btn-drive" onclick="openDrive(${idx})">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Ver en Drive
+        </button>
+        <button class="card-btn card-btn-dl" onclick="dlFile(${idx})">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar
+        </button>
+      </div>
+    </div>`;
+  return div;
+}
+
+function getCS(id){if(!cState[id])cState[id]={cur:0};return cState[id];}
+function goTo(e,id,i){e.stopPropagation();getCS(id).cur=i;updateC(id);}
+function shift(e,id,dir){
+  e.stopPropagation();const g=rendered[id];if(!g)return;
+  const s=getCS(id);s.cur=(s.cur+dir+g.files.length)%g.files.length;updateC(id);
+}
+function updateC(id){
+  const s=getCS(id);
+  // Opacity-based: show active slide, hide others
+  document.querySelectorAll(`#ct-${id} .carousel-slide`).forEach((sl,i)=>{
+    sl.classList.toggle('active', i===s.cur);
+  });
+  document.querySelectorAll(`#prev-${id} .cdot`).forEach((d,i)=>d.classList.toggle('on',i===s.cur));
+  const g=rendered[id],l=document.getElementById(`lbl-${id}`);
+  if(g&&l)l.textContent=g.files[s.cur].skuFull;
+}
+
+function openDrive(id){const g=rendered[id];if(!g)return;toast(`Ver en Drive: ${g.files[getCS(id).cur].skuFull}`);}
+function dlFile(id){
+  const g=rendered[id];if(!g)return;
+  const f=g.files[getCS(id).cur];
+  if(!f.src){ toast('Sin URL de descarga'); return; }
+  // Abre la URL directa en nueva pestaña — el usuario puede guardar desde ahí
+  window.open(f.src, '_blank');
+}
+
+let tTimer;
+function toast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');clearTimeout(tTimer);
+  tTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
