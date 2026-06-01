@@ -392,7 +392,7 @@
   <div class="header">
     <div>
       <img src="https://brandepica.com/firmas/generadortitulo.png" alt="Generador de SKU" style="height:24px; width:auto; max-width:100%; object-fit:contain; display:block;" />
-      <p style="margin:4px 0 0; font-size:0.72rem; color:#aaa; letter-spacing:0.04em;">Versión Beta 1.1</p>
+      <p style="margin:4px 0 0; font-size:0.72rem; color:#aaa; letter-spacing:0.04em;">Versión Beta 1.2</p>
     </div>
     <img src="https://brandepica.com/firmas/LogoBran.png" alt="Brandépica" style="height:22px; width:auto; object-fit:contain; flex-shrink:0;" />
   </div>
@@ -423,25 +423,25 @@
     </div>
   </div>
 
-  <!-- FILA ALEATICA: campo custom + submarca -->
-  <div class="row-2 hidden" id="fila-aleatica">
+  <!-- FILA CAMPAÑA: visible para TODOS los clientes -->
+  <div class="row-2 hidden" id="fila-campana">
     <div class="field">
       <label for="ale-custom">
         Campaña / Referencia
         <span style="font-weight:400; text-transform:none; letter-spacing:0; font-size:0.7rem; color:#aaa;">(Opcional)</span>
       </label>
-      <input type="text" id="ale-custom" placeholder="Ej. EBDI, FLYER…" oninput="renderSKUs()" style="max-width: 160px;" />
+      <input type="text" id="ale-custom" placeholder="Ej. EBDI, LANZAMIENTO…" oninput="renderSKUs()" style="max-width: 200px;" />
     </div>
-    <div class="field" id="ale-submarca-wrap">
+  </div>
+
+  <!-- FILA ALEATICA: Submarca + Horario -->
+  <div class="row-2 hidden" id="fila-aleatica">
+    <div class="field">
       <label for="submarca">Submarca</label>
       <select id="submarca" onchange="renderSKUs()">
         <option value="">— Selecciona —</option>
       </select>
     </div>
-  </div>
-
-  <!-- FILA ALEATICA: Horario -->
-  <div class="row-2 hidden" id="fila-aleatica-horario">
     <div class="field">
       <label>
         <span class="info-wrap">
@@ -719,9 +719,9 @@
     const cli = document.getElementById("cliente").value;
     active.clear(); chains = []; openPickerFor = null;
 
+    hide("fila-campana");
     hide("fila-submarca");
     hide("fila-aleatica");
-    hide("fila-aleatica-horario");
     hide("fila-evo-cat");
     hide("fila-evo-gramaje");
     hide("fila-evo-gramaje-custom");
@@ -742,6 +742,9 @@
 
     if (!cli) { modoCliente = "GENERAL"; resetPlats("SOCIAL"); renderSKUs(); return; }
 
+    // Campo Campaña visible para TODOS los clientes
+    show("fila-campana");
+
     if (cli === "EVO") {
       modoCliente = "EVO";
       show("fila-evo-cat");
@@ -756,7 +759,6 @@
     } else if (cli === "ALE" || cli === "AE" || cli === "AC" || cli === "FUND") {
       modoCliente = "ALEATICA";
       show("fila-aleatica");
-      show("fila-aleatica-horario");
       if (SUBMARCAS[cli]) {
         Object.entries(SUBMARCAS[cli]).forEach(([nombre, abr]) => {
           const o = document.createElement("option");
@@ -1049,9 +1051,9 @@
 
     function buildSKU(platTokens) {
       const parts = [cli];
+      const custom = document.getElementById("ale-custom").value.trim();
 
       if (modoCliente === "ALEATICA") {
-        const custom = document.getElementById("ale-custom").value.trim();
         if (custom) parts.push(custom);
         const sub = document.getElementById("submarca").value;
         if (sub) parts.push(sub);
@@ -1063,6 +1065,7 @@
 
       } else if (modoCliente === "EVO") {
         if (fechaF) parts.push(fechaF);
+        if (custom) parts.push(custom);
         const cat   = document.getElementById("evo-categoria").value;
         const linea = document.getElementById("evo-linea").value;
         const gram  = getEvoGramaje();
@@ -1077,10 +1080,12 @@
         const prod  = document.getElementById("var-producto").value;
         if (pilar) parts.push(pilar);
         if (prod)  parts.push(prod);
+        if (custom) parts.push(custom);
 
       } else {
         const sub = document.getElementById("submarca-gen").value;
         if (sub) parts.push(sub);
+        if (custom) parts.push(custom);
       }
 
       if (fechaF) parts.push(fechaF);
@@ -1182,9 +1187,9 @@
     if (!cli) return "";
 
     const parts = [cli];
+    const custom = document.getElementById("ale-custom").value.trim();
 
     if (modoCliente === "ALEATICA") {
-      const custom = document.getElementById("ale-custom").value.trim();
       if (custom) parts.push(custom);
       const sub = document.getElementById("submarca").value;
       if (sub) parts.push(sub);
@@ -1194,6 +1199,7 @@
 
     } else if (modoCliente === "EVO") {
       if (fechaF) parts.push(fechaF);
+      if (custom) parts.push(custom);
       const cat   = document.getElementById("evo-categoria").value;
       const linea = document.getElementById("evo-linea").value;
       const gram  = getEvoGramaje();
@@ -1206,11 +1212,13 @@
       const prod  = document.getElementById("var-producto").value;
       if (pilar) parts.push(pilar);
       if (prod)  parts.push(prod);
+      if (custom) parts.push(custom);
       if (fechaF) parts.push(fechaF);
 
     } else {
       const sub = document.getElementById("submarca-gen").value;
       if (sub) parts.push(sub);
+      if (custom) parts.push(custom);
       if (fechaF) parts.push(fechaF);
     }
 
