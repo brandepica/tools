@@ -449,6 +449,24 @@
     </div>
   </div>
 
+  <!-- FILA DIRECTIVOS: solo para clientes Aleatica -->
+  <div class="row-2 hidden" id="fila-directivos">
+    <div class="field">
+      <label for="ale-directivo">
+        Directivo
+        <span style="font-weight:400; text-transform:none; letter-spacing:0; font-size:0.7rem; color:#aaa;">(Opcional)</span>
+      </label>
+      <select id="ale-directivo" onchange="renderSKUs()">
+        <option value="">— Sin directivo —</option>
+        <option value="BM">Bosco Martí</option>
+        <option value="IM">Itzel Meyenberg</option>
+        <option value="DD">David Díaz</option>
+        <option value="RL">Rubén López</option>
+        <option value="SV">Simona Visztova</option>
+      </select>
+    </div>
+  </div>
+
   <!-- FILA SUBMARCA GENÉRICA -->
   <div class="row-2 hidden" id="fila-submarca">
     <div class="field">
@@ -718,6 +736,7 @@
 
     hide("fila-campana");
     hide("campo-horario");
+    hide("fila-directivos");
     hide("fila-submarca");
     hide("fila-evo-cat");
     hide("fila-evo-gramaje");
@@ -734,6 +753,7 @@
     document.getElementById("var-producto").innerHTML = '<option value="">— Selecciona —</option>';
     document.getElementById("ale-custom").value = "";
     document.getElementById("ale-horario").value = "";
+    document.getElementById("ale-directivo").value = "";
 
     if (!cli) { modoCliente = "GENERAL"; resetPlats("SOCIAL"); renderSKUs(); return; }
 
@@ -755,6 +775,7 @@
       modoCliente = "ALEATICA";
       show("fila-campana");
       show("campo-horario");
+      if (cli === "ALE") show("fila-directivos");
       resetPlats("SOCIAL");
 
     } else {
@@ -1044,8 +1065,10 @@
       const custom = document.getElementById("ale-custom").value.trim();
 
       if (modoCliente === "ALEATICA") {
-        const sub = ALE_CLIENTES[cli];   // prefijo hardcodeado: "CEM", "AUN", "" etc.
+        const sub = ALE_CLIENTES[cli];
         if (sub) parts.push(sub);
+        const directivo = document.getElementById("ale-directivo").value;
+        if (directivo) parts.push(directivo);
         if (custom) parts.push(custom);
         if (fechaF) parts.push(fechaF);
         const horario = getHorario();
@@ -1183,6 +1206,8 @@
     if (modoCliente === "ALEATICA") {
       const sub = ALE_CLIENTES[cli];
       if (sub) parts.push(sub);
+      const directivo = document.getElementById("ale-directivo").value;
+      if (directivo) parts.push(directivo);
       if (custom) parts.push(custom);
       if (fechaF) parts.push(fechaF);
       const horario = getHorario();
