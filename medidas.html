@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de SKU — Brandépica</title>
+  <style>
+    :root {
+      --green: #c8f000;
+      --green-dark: #9db800;
+      --green-mid: #b8de00;
+      --green-light: rgba(200,240,0,0.18);
+      --green-active: rgba(200,240,0,0.22);
+      --purple: #4e2a6a;
+      --purple-light: rgba(78,42,106,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-image: url('https://brandepica.com/firmas/Fondo_BE-01.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-color: #e8eaf0;
+      min-height: 100vh;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    html { background-color: #e8eaf0; }
+    .card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 2rem 1.5rem;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--purple-light);
+      padding-bottom: 1.25rem;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+    select, input[type="date"], input[type="text"] {
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      padding: 0.45rem 0.65rem;
+      width: 100%;
+      font-size: 0.9rem;
+      font-family: system-ui, -apple-system, sans-serif;
+      outline: none;
+      transition: border-color 0.15s;
+      background: white;
+    }
+    select:focus, input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 2px rgba(78,42,106,0.15);
+    }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .field { margin-bottom: 0; }
+    .hidden { display: none !important; }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin: 1.25rem 0 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .plat-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .plat-card {
+      background: var(--purple-light);
+      border: 1.5px solid transparent;
+      border-radius: 0.5rem;
+      padding: 0.45rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .plat-card:hover { border-color: var(--purple); }
+    .plat-card.active {
+      border-color: var(--green-dark);
+      background: var(--green-active);
+    }
+    .plat-card .dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      border: 2px solid var(--purple);
+      background: transparent;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .plat-card.active .dot {
+      background: var(--green-dark);
+      border: 2px solid var(--green-dark);
+    }
+    .plat-card span { font-size: 0.82rem; font-weight: 600; color: var(--purple); }
+    .chain-group {
+      display: inline-flex;
+      align-items: center;
+      border: 1.5px solid var(--green-dark);
+      border-radius: 0.5rem;
+      overflow: visible;
+      background: var(--green-light);
+      position: relative;
+    }
+    .chain-group .plat-card {
+      border: none;
+      border-radius: 0;
+      background: rgba(200,240,0,0.25);
+      padding: 0.4rem 0.7rem;
+    }
+    .chain-group .plat-card.active { background: rgba(200,240,0,0.25); }
+    .chain-group .chain-sep {
+      font-size: 0.7rem;
+      color: white;
+      font-weight: 700;
+      padding: 0 7px;
+      background: var(--green-mid);
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+    }
+    .unlink-btn {
+      position: relative;
+      background: var(--green-mid);
+      border: none;
+      padding: 0 0.55rem;
+      cursor: pointer;
+      color: var(--purple);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      align-self: stretch;
+      transition: background 0.15s;
+      z-index: 10;
+    }
+    .unlink-btn:hover { background: var(--green-dark); }
+    .unlink-btn .tooltip {
+      position: fixed;
+      background: var(--purple);
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 600;
+      white-space: nowrap;
+      padding: 0.3rem 0.6rem;
+      border-radius: 0.3rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      transform: translateX(-50%) translateY(-100%);
+      margin-top: -8px;
+      z-index: 999;
+    }
+    .unlink-btn .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: var(--purple);
+    }
+    .plat-format-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.4rem 0.6rem;
+      background: var(--purple-light);
+      border-radius: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+    .plat-format-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--purple);
+      min-width: 90px;
+    }
+    .plat-format-row select {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.82rem;
+      width: auto;
+      flex: 1;
+    }
+    .link-btn {
+      background: none;
+      border: 1.5px solid var(--purple);
+      border-radius: 50%;
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--purple);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .link-btn:hover, .link-btn.open {
+      background: var(--purple);
+      color: white;
+      border-color: var(--purple);
+    }
+    .chain-picker {
+      background: #f9f8fc;
+      border: 1.5px solid var(--green-dark);
+      border-radius: 0.5rem;
+      padding: 0.65rem 0.85rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.82rem;
+    }
+    .chain-picker p { margin: 0 0 0.5rem; color: var(--purple); font-weight: 600; }
+    .picker-peers { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .picker-peer {
+      border: 1.5px solid var(--purple);
+      background: white;
+      border-radius: 0.375rem;
+      padding: 0.3rem 0.65rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--purple);
+      font-weight: 600;
+      transition: background 0.12s;
+    }
+    .picker-peer:hover { background: var(--purple-light); }
+    .bottom-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+      align-items: start;
+    }
+    .col-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+    .sku-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--purple-light);
+      border-radius: 0.4rem;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.5rem;
+      gap: 0.5rem;
+    }
+    .sku-chip span {
+      font-family: 'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 0.3rem;
+      padding: 0.25rem 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { background: var(--green); color: var(--purple); }
+    .copy-btn.copied { background: var(--green); color: var(--purple); }
+    .footer { text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1.5px solid var(--purple-light); }
+    /* ── TOOLTIP INFO ── */
+    .info-wrap { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid #aaa;
+      color: #aaa;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: default;
+      position: relative;
+      flex-shrink: 0;
+      font-style: normal;
+    }
+    .info-icon .info-tooltip {
+      position: fixed;
+      background: var(--purple);
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 500;
+      white-space: nowrap;
+      padding: 0.35rem 0.6rem;
+      border-radius: 0.3rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      transform: translateX(-50%) translateY(-100%);
+      margin-top: -8px;
+      z-index: 999;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .info-icon .info-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: var(--purple);
+    }
+    /* ── SKU CARPETA ── */
+    .carpeta-section {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1.5px dashed var(--purple-light);
+    }
+    .carpeta-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .carpeta-badge {
+      font-size: 0.62rem;
+      background: var(--purple-light);
+      color: var(--purple);
+      border-radius: 999px;
+      padding: 1px 8px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .sku-chip.carpeta {
+      background: rgba(78,42,106,0.05);
+      border: 1.5px dashed var(--purple-light);
+    }
+    /* ── FOOTER MADE WITH ── */
+    .footer-made {
+      text-align: center;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1.5px solid var(--purple-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      color: #bbb;
+      font-size: 0.72rem;
+    }
+    .footer-made img { height: 14px; width: auto; opacity: 0.5; vertical-align: middle; }
+    /* ── MEDIDAS ── */
+    .medidas-section {
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1.5px dashed var(--purple-light);
+    }
+    .medidas-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+      opacity: 0.6;
+    }
+    .medidas-grid {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      overflow-x: auto;
+    }
+    .medidas-col {
+      flex: 0 0 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .medidas-col-header {
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: white;
+      background: var(--purple);
+      border-radius: 0.3rem;
+      padding: 0.2rem 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.1rem;
+      white-space: nowrap;
+    }
+    .medida-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--purple-light);
+      border-radius: 0.35rem;
+      padding: 0.3rem 0.5rem;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+    .medida-chip-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+    .medida-chip-desc {
+      font-size: 0.6rem;
+      color: #888;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .medida-chip-px {
+      font-family: 'Lucida Console', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--purple);
+      white-space: nowrap;
+    }
+    .medida-copy-btn {
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.18rem 0.45rem;
+      font-size: 0.62rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .medida-copy-btn:hover { background: var(--green-dark); color: var(--purple); }
+    .medida-copy-btn.copied { background: var(--green); color: var(--purple); }
+    @media (max-width: 600px) {
+      .bottom-cols { grid-template-columns: 1fr; }
+      .row-2, .row-3, .row-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <div class="header">
+    <div>
+      <img src="https://brandepica.com/firmas/generadortitulo.png" alt="Generador de SKU" style="height:24px; width:auto; max-width:100%; object-fit:contain; display:block;" />
+      <p style="margin:4px 0 0; font-size:0.72rem; color:#aaa; letter-spacing:0.04em;">Versión Beta 1.3.1</p>
+    </div>
+    <img src="https://brandepica.com/firmas/LogoBran.png" alt="Brandépica" style="height:22px; width:auto; object-fit:contain; flex-shrink:0;" />
+  </div>
+
+  <div class="row-2">
+    <div class="field">
+      <label for="cliente">Cliente</label>
+      <select id="cliente" onchange="onClienteChange()">
+        <option value="">— Selecciona cliente —</option>
+        <option value="ALE">Aleatica</option>
+        <option value="ALECЕМ">Aleatica Circuito Exterior Mexiquense</option>
+        <option value="ALEAUN">Aleatica Autopista Urbana Norte</option>
+        <option value="ALEVB">Aleatica Viaducto Bicentenario</option>
+        <option value="ALEAUNVB">Aleatica AUN y VB</option>
+        <option value="ALECOINT">Aleatica Comunicación Interna</option>
+        <option value="BE">Brandépica</option>
+        <option value="DAI">Daikin</option>
+        <option value="ENG">Engen</option>
+        <option value="EVO">Evolution</option>
+        <option value="NIK">Nikki Weil</option>
+        <option value="NUT">Nutrical</option>
+        <option value="TEL">TeleVía</option>
+        <option value="VAR">Varlix</option>
+        <option value="WAL">Waldorf Astoria</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="fecha">Fecha</label>
+      <input type="date" id="fecha" onchange="renderSKUs()" />
+    </div>
+  </div>
+
+  <!-- FILA CAMPAÑA: visible para TODOS los clientes -->
+  <div class="row-2 hidden" id="fila-campana">
+    <div class="field">
+      <label for="ale-custom">
+        Campaña / Referencia
+        <span style="font-weight:400; text-transform:none; letter-spacing:0; font-size:0.7rem; color:#aaa;">(Opcional)</span>
+      </label>
+      <input type="text" id="ale-custom" placeholder="Ej. EBDI, LANZAMIENTO…" oninput="renderSKUs()" style="max-width: 200px;" />
+    </div>
+    <!-- Horario: solo visible para clientes Aleatica -->
+    <div class="field hidden" id="campo-horario">
+      <label>
+        <span class="info-wrap">
+          Hora de publicación
+          <span style="font-weight:400; text-transform:none; letter-spacing:0; font-size:0.7rem; color:#aaa;">(Opcional)</span>
+          <i class="info-icon" id="info-horario">i
+            <span class="info-tooltip">Horario de 24 hrs, sólo coloca la hora sin minutos. Los meridianos se ponen automáticamente.</span>
+          </i>
+        </span>
+      </label>
+      <input type="text" id="ale-horario" placeholder="Ej. 10, 14, 20…" oninput="onHorarioInput()" style="max-width:120px;" />
+    </div>
+  </div>
+
+  <!-- FILA DIRECTIVOS: solo para clientes Aleatica -->
+  <div class="row-2 hidden" id="fila-directivos">
+    <div class="field">
+      <label for="ale-directivo">
+        Directivo
+        <span style="font-weight:400; text-transform:none; letter-spacing:0; font-size:0.7rem; color:#aaa;">(Opcional)</span>
+      </label>
+      <select id="ale-directivo" onchange="renderSKUs()">
+        <option value="">— Sin directivo —</option>
+        <option value="BM">Bosco Martí</option>
+        <option value="IM">Itzel Meyenberg</option>
+        <option value="DD">David Díaz</option>
+        <option value="RL">Rubén López</option>
+        <option value="SV">Simona Visztova</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- FILA SUBMARCA GENÉRICA -->
+  <div class="row-2 hidden" id="fila-submarca">
+    <div class="field">
+      <label for="submarca-gen">Submarca</label>
+      <select id="submarca-gen" onchange="renderSKUs()">
+        <option value="">— Selecciona —</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- FILA EVOLUTION: Categoría + Línea -->
+  <div class="row-2 hidden" id="fila-evo-cat">
+    <div class="field">
+      <label for="evo-categoria">Categoría</label>
+      <select id="evo-categoria" onchange="onEvoCategoriaChange()">
+        <option value="">— Selecciona categoría —</option>
+        <option value="MKT">MKT — Marketing / Redes</option>
+        <option value="ETIQ">ETIQ — Etiqueta / Packaging</option>
+        <option value="DIS">DIS — Diseño / E-commerce</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="evo-linea">Línea / Producto</label>
+      <select id="evo-linea" onchange="renderSKUs()">
+        <option value="">— Selecciona línea —</option>
+        <option value="WP">WP — Whey Protein</option>
+        <option value="VP">VP — Vegetal Protein</option>
+        <option value="CAS">CAS — Caseinato de Calcio</option>
+        <option value="BCAA">BCAA — BCAAs</option>
+        <option value="CREA">CREA — Creatina</option>
+        <option value="GLUT">GLUT — L-Glutamina</option>
+        <option value="COLA">COLA — Colágeno Hidrolizado</option>
+        <option value="LCAR">LCAR — L-Carnitina</option>
+        <option value="HYDR">HYDR — Hydromineral Pro</option>
+        <option value="BAR">BAR — Protein Bars</option>
+        <option value="GOM">GOM — Gomitas</option>
+        <option value="KETO">KETO — Keto Coffee Creamer</option>
+        <option value="BOT">BOT — Botellas Deportivas</option>
+        <option value="COMBO">COMBO — Combos</option>
+        <option value="GEN">GEN — General / Institucional</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- FILA EVOLUTION: Gramaje -->
+  <div class="row-2 hidden" id="fila-evo-gramaje">
+    <div class="field">
+      <label for="evo-gramaje">Gramaje</label>
+      <select id="evo-gramaje" onchange="onEvoGramajeChange()">
+        <option value="">— Sin gramaje —</option>
+        <option value="500">500 g</option>
+        <option value="800">800 g</option>
+        <option value="1000">1000 g</option>
+        <option value="1800">1800 g</option>
+        <option value="2800">2800 g</option>
+        <option value="OTRO">Otro…</option>
+      </select>
+    </div>
+  </div>
+  <div class="hidden" id="fila-evo-gramaje-custom" style="margin-bottom:1rem;">
+    <label for="evo-gramaje-custom">Gramaje personalizado</label>
+    <input type="text" id="evo-gramaje-custom" placeholder="Ej. 1500" oninput="renderSKUs()" style="max-width:200px;" />
+  </div>
+
+  <!-- FILA VARLIX: Pilar + Producto -->
+  <div class="row-2 hidden" id="fila-varlix">
+    <div class="field">
+      <label for="var-pilar">Pilar</label>
+      <select id="var-pilar" onchange="onVarlixPilarChange()">
+        <option value="">— Selecciona —</option>
+        <option value="PR">Producto</option>
+        <option value="NS">Nosotros</option>
+        <option value="EV">Eventos y colaboraciones</option>
+        <option value="SC">Sector</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="var-producto">Producto</label>
+      <select id="var-producto" onchange="renderSKUs()">
+        <option value="">— Selecciona —</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- PLATAFORMAS con tooltip info -->
+  <div class="section-title" id="plat-section-title">
+    <span id="plat-title-text">Plataformas</span>
+    <i class="info-icon">i
+      <span class="info-tooltip">Encadena plataformas que comparten la misma medida para generar un SKU combinado.</span>
+    </i>
+  </div>
+  <div class="plat-grid" id="plat-grid"></div>
+
+  <div class="bottom-cols">
+    <div>
+      <div class="col-title">Formatos</div>
+      <div id="formatos-col"></div>
+    </div>
+    <div>
+      <div class="col-title">SKUs generados</div>
+      <div id="resultado"></div>
+    </div>
+  </div>
+
+  <!-- Medidas: ancho completo, debajo de formatos y SKUs -->
+  <div id="medidas-section" style="display:none;" class="medidas-section">
+    <div class="medidas-title" id="medidas-title">Medidas</div>
+    <div class="medidas-grid" id="medidas-grid"></div>
+  </div>
+
+  <!-- SKU CARPETA DRIVE -->
+  <div class="carpeta-section" id="carpeta-section" style="display:none;">
+    <div class="carpeta-title">
+      📁 SKU de carpeta Drive
+      <span class="carpeta-badge">Sin plataforma · Sin formato</span>
+    </div>
+    <div id="resultado-carpeta"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-made">
+    Hecho con Inteligencia Artificial
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Claude_AI_logo.svg" alt="Claude" title="Claude by Anthropic" />
+    pero con cariñito ❤️
+    <a href="https://wa.link/wvgv69" target="_blank" style="margin-left:auto;background:#c8f000;color:#1a3a8f;font-size:0.68rem;font-weight:700;padding:0.25rem 0.7rem;border-radius:0.3rem;text-decoration:none;letter-spacing:0.05em;transition:background 0.15s;" onmouseover="this.style.background='#b8de00'" onmouseout="this.style.background='#c8f000'">FEEDBACK</a>
+  </div>
+
+</div>
+
+<script>
+  const MESES = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+
+  const PLAT_SOCIAL = [
+    { value:"FB", label:"Facebook", formatos:[
+      {label:"Imagen",    value:"IMG"},
+      {label:"Video",     value:"VIDEO"},
+      {label:"Carrusel",  value:"CAR"},
+      {label:"Galería",   value:"GAL"},
+      {label:"Colección", value:"COL"},
+      {label:"Stories",   value:"STO"},
+      {label:"Reel",      value:"REEL"},
+    ]},
+    { value:"IG", label:"Instagram", formatos:[
+      {label:"Imagen",    value:"IMG"},
+      {label:"Video",     value:"VIDEO"},
+      {label:"Carrusel",  value:"CAR"},
+      {label:"Reel",      value:"REEL"},
+      {label:"Stories",   value:"STO"},
+    ]},
+    { value:"META", label:"META", formatos:[
+      {label:"Imagen",    value:"IMG"},
+      {label:"Video",     value:"VIDEO"},
+      {label:"Carrusel",  value:"CAR"},
+      {label:"Reel",      value:"REEL"},
+      {label:"Stories",   value:"STO"},
+    ]},
+    { value:"X", label:"X", formatos:[
+      {label:"Imagen",    value:"IMG"},
+      {label:"Video",     value:"VIDEO"},
+      {label:"Galería",   value:"GAL"},
+    ]},
+    { value:"LK", label:"LinkedIn", formatos:[
+      {label:"Imagen",    value:"IMG"},
+      {label:"Video",     value:"VIDEO"},
+      {label:"Carrusel",  value:"CAR"},
+    ]},
+    { value:"TK", label:"TikTok", formatos:[
+      {label:"Video",     value:"VIDEO"},
+      {label:"Imagen",    value:"IMG"},
+      {label:"Stories",   value:"STO"},
+    ]},
+    { value:"WA", label:"WhatsApp", formatos:[
+      {label:"Imagen",    value:"IMG"},
+    ]},
+  ];
+
+  const PLAT_DIS = [
+    { value:"ML",  label:"Mercado Libre", formatos:[
+      {label:"Banner",   value:"BANNER"},
+      {label:"Ficha",    value:"FICHA"},
+      {label:"Imagen",   value:"IMG"},
+      {label:"Portada",  value:"PORTADA"},
+    ]},
+    { value:"ME",  label:"MELI Premium", formatos:[
+      {label:"Banner",   value:"BANNER"},
+      {label:"Ficha",    value:"FICHA"},
+      {label:"Imagen",   value:"IMG"},
+    ]},
+    { value:"AMZ", label:"Amazon", formatos:[
+      {label:"Banner",   value:"BANNER"},
+      {label:"Ficha",    value:"FICHA"},
+      {label:"Imagen",   value:"IMG"},
+      {label:"A+",       value:"A+"},
+    ]},
+    { value:"FI",  label:"Fitsi", formatos:[
+      {label:"Banner",   value:"BANNER"},
+      {label:"Ficha",    value:"FICHA"},
+      {label:"Imagen",   value:"IMG"},
+    ]},
+    { value:"WEB", label:"Sitio Web", formatos:[
+      {label:"Banner",   value:"BANNER"},
+      {label:"Hero",     value:"HERO"},
+      {label:"Popup",    value:"POPUP"},
+      {label:"Ficha",    value:"FICHA"},
+    ]},
+    { value:"COF", label:"Cofepris", formatos:[
+      {label:"Etiqueta", value:"ETIQ"},
+      {label:"Ficha",    value:"FICHA"},
+    ]},
+  ];
+
+  const SUBMARCAS = {
+    DAI: {
+      "AirCommunity": "ACOM",
+      "DIMO":         "DIMO",
+    },
+  };
+
+  // Clientes Aleatica con su prefijo de SKU hardcodeado
+  const ALE_CLIENTES = {
+    "ALE":    "",        // Solo ALE, sin submarca
+    "ALECЕМ": "CEM",
+    "ALEAUN": "AUN",
+    "ALEVB":  "VB",
+    "ALEAUNVB": "AUNVB",
+    "ALECOINT": "CoINT",
+  };
+
+  const VAR_PRODUCTOS = {
+    PR: {
+      "Accesorios para Hidrocefalia":     "AH",
+      "Válvulas para Hidrocefalia":       "VA",
+      "Aspirador Ultrasónico":            "AU",
+      "Clips para Aneurisma":             "CA",
+      "Neuronavegación":                  "NN",
+      "Craneótomos":                      "CT",
+      "Osteosíntesis":                    "OS",
+      "Sustituto de Duramadre":           "SD",
+      "Trombectomía Mecánica":            "TM",
+      "Drenaje Externo":                  "DE",
+      "Distracción Osteogénica":          "DO",
+      "Implantes Personalizados (IPS®)":  "IP",
+      "Cortador Ultrasónico":             "CU",
+      "Lámparas Frontales":               "LF",
+      "Sistema de Fijación de Costillas": "FC",
+      "Instrumental de Microcirugía":     "IM",
+    },
+    NS: {}, EV: {}, SC: {},
+  };
+
+  let active = new Map();
+  let chains = [];
+  let currentPlats = [];
+  let openPickerFor = null;
+  let modoCliente = "GENERAL";
+
+  function formatearFecha(val) {
+    if (!val) return "";
+    const [yyyy, mm, dd] = val.split("-");
+    return `${dd}${MESES[parseInt(mm,10)-1]}${yyyy.slice(2)}`;
+  }
+
+  function show(id) { document.getElementById(id).classList.remove("hidden"); }
+  function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+  function setPlatTitle(texto) {
+    document.getElementById("plat-title-text").textContent = texto;
+  }
+
+  function onClienteChange() {
+    const cli = document.getElementById("cliente").value;
+    active.clear(); chains = []; openPickerFor = null;
+
+    hide("fila-campana");
+    hide("campo-horario");
+    hide("fila-directivos");
+    hide("fila-submarca");
+    hide("fila-evo-cat");
+    hide("fila-evo-gramaje");
+    hide("fila-evo-gramaje-custom");
+    hide("fila-varlix");
+
+    const subGenSel = document.getElementById("submarca-gen");
+    subGenSel.innerHTML = '<option value="">— Selecciona —</option>';
+
+    document.getElementById("evo-categoria").value = "";
+    document.getElementById("evo-linea").value = "";
+    document.getElementById("evo-gramaje").value = "";
+    document.getElementById("var-pilar").value = "";
+    document.getElementById("var-producto").innerHTML = '<option value="">— Selecciona —</option>';
+    document.getElementById("ale-custom").value = "";
+    document.getElementById("ale-horario").value = "";
+    document.getElementById("ale-directivo").value = "";
+
+    if (!cli) { modoCliente = "GENERAL"; resetPlats("SOCIAL"); renderSKUs(); return; }
+
+    // Campo Campaña visible para TODOS los clientes
+    show("fila-campana");
+
+    if (cli === "EVO") {
+      modoCliente = "EVO";
+      show("fila-evo-cat");
+      setPlatTitle("Plataformas");
+      resetPlats("SOCIAL_NO_META");
+
+    } else if (cli === "VAR") {
+      modoCliente = "VARLIX";
+      show("fila-varlix");
+      resetPlats("SOCIAL");
+
+    } else if (cli in ALE_CLIENTES) {
+      modoCliente = "ALEATICA";
+      show("fila-campana");
+      show("campo-horario");
+      if (cli === "ALE") show("fila-directivos");
+      resetPlats("SOCIAL");
+
+    } else {
+      modoCliente = "GENERAL";
+      if (SUBMARCAS[cli]) {
+        Object.entries(SUBMARCAS[cli]).forEach(([nombre, abr]) => {
+          const o = document.createElement("option");
+          o.value = abr; o.textContent = nombre;
+          subGenSel.appendChild(o);
+        });
+        show("fila-submarca");
+      }
+      resetPlats("SOCIAL");
+    }
+
+    renderSKUs();
+  }
+
+  function onEvoCategoriaChange() {
+    const cat = document.getElementById("evo-categoria").value;
+    if (cat === "ETIQ" || cat === "DIS") {
+      show("fila-evo-gramaje");
+      setPlatTitle("Destino / Canal");
+      resetPlats("DIS");
+    } else {
+      hide("fila-evo-gramaje");
+      hide("fila-evo-gramaje-custom");
+      document.getElementById("evo-gramaje").value = "";
+      setPlatTitle("Plataformas");
+      resetPlats("SOCIAL_NO_META");
+    }
+    active.clear(); chains = []; openPickerFor = null;
+    renderPlatGrid();
+    renderSKUs();
+  }
+
+  function onEvoGramajeChange() {
+    const v = document.getElementById("evo-gramaje").value;
+    if (v === "OTRO") show("fila-evo-gramaje-custom");
+    else hide("fila-evo-gramaje-custom");
+    renderSKUs();
+  }
+
+  function getEvoGramaje() {
+    const cat = document.getElementById("evo-categoria").value;
+    if (cat !== "ETIQ" && cat !== "DIS") return "";
+    const g = document.getElementById("evo-gramaje").value;
+    if (g === "OTRO") return document.getElementById("evo-gramaje-custom").value.trim();
+    return g;
+  }
+
+  function onVarlixPilarChange() {
+    const pilar = document.getElementById("var-pilar").value;
+    const prodSel = document.getElementById("var-producto");
+    prodSel.innerHTML = '<option value="">— Selecciona —</option>';
+    const prods = VAR_PRODUCTOS[pilar] || {};
+    Object.entries(prods).forEach(([nombre, codigo]) => {
+      const o = document.createElement("option");
+      o.value = codigo; o.textContent = nombre;
+      prodSel.appendChild(o);
+    });
+    renderSKUs();
+  }
+
+  function resetPlats(modo) {
+    if (modo === "DIS") currentPlats = PLAT_DIS;
+    else if (modo === "SOCIAL_NO_META") currentPlats = PLAT_SOCIAL.filter(p => p.value !== "META");
+    else currentPlats = PLAT_SOCIAL;
+    active.clear(); chains = []; openPickerFor = null;
+    renderPlatGrid();
+    renderFormatos();
+  }
+
+  function renderPlatGrid() {
+    const grid = document.getElementById("plat-grid");
+    grid.innerHTML = "";
+    const chainedSet = new Set(chains.flat());
+
+    chains.forEach((group, gi) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "chain-group";
+      group.forEach((val, i) => {
+        if (i > 0) {
+          const sep = document.createElement("span");
+          sep.className = "chain-sep";
+          sep.textContent = "+";
+          wrapper.appendChild(sep);
+        }
+        const pl = currentPlats.find(p => p.value === val);
+        const card = document.createElement("div");
+        card.className = "plat-card" + (active.has(val) ? " active" : "");
+        card.innerHTML = `<div class="dot"></div><span>${pl.label}</span>`;
+        card.onclick = () => togglePlat(val);
+        wrapper.appendChild(card);
+      });
+      const unlinkBtn = document.createElement("button");
+      unlinkBtn.className = "unlink-btn";
+      unlinkBtn.innerHTML = `<span class="tooltip">Desligar redes</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor"/>
+        </svg>`;
+      unlinkBtn.addEventListener("mouseenter", () => {
+        const tip = unlinkBtn.querySelector(".tooltip");
+        const rect = unlinkBtn.getBoundingClientRect();
+        tip.style.left = (rect.left + rect.width / 2) + "px";
+        tip.style.top  = (rect.top - 8) + "px";
+        tip.style.opacity = "1";
+      });
+      unlinkBtn.addEventListener("mouseleave", () => {
+        unlinkBtn.querySelector(".tooltip").style.opacity = "0";
+      });
+      unlinkBtn.onclick = () => { chains.splice(gi, 1); openPickerFor = null; renderAll(); };
+      wrapper.appendChild(unlinkBtn);
+      grid.appendChild(wrapper);
+    });
+
+    currentPlats.forEach(pl => {
+      if (chainedSet.has(pl.value)) return;
+      const card = document.createElement("div");
+      card.className = "plat-card" + (active.has(pl.value) ? " active" : "");
+      card.innerHTML = `<div class="dot"></div><span>${pl.label}</span>`;
+      card.onclick = () => togglePlat(pl.value);
+      grid.appendChild(card);
+    });
+  }
+
+  function togglePlat(val) {
+    if (active.has(val)) {
+      active.delete(val);
+      chains = chains.filter(g => !g.includes(val));
+      if (openPickerFor === val || openPickerFor === "grp:"+val || openPickerFor === "ind:"+val) openPickerFor = null;
+    } else {
+      const pl = currentPlats.find(p => p.value === val);
+      active.set(val, pl.formatos[0].value);
+    }
+    renderAll();
+  }
+
+  function renderFormatos() {
+    const col = document.getElementById("formatos-col");
+    col.innerHTML = "";
+    if (active.size === 0) {
+      col.innerHTML = '<p style="font-size:0.8rem;color:#aaa;margin:0;">Selecciona una plataforma</p>';
+      return;
+    }
+
+    chains.forEach(group => {
+      if (!group.every(v => active.has(v))) return;
+      const pl0 = currentPlats.find(p => p.value === group[0]);
+      const fmt = active.get(group[0]);
+      const pickerKey = "grp:" + group[0];
+      const candidates = [...active.keys()].filter(v => !group.includes(v));
+
+      const row = document.createElement("div");
+      row.className = "plat-format-row";
+      const lbl = document.createElement("span");
+      lbl.className = "plat-format-label";
+      lbl.textContent = group.join(" + ");
+      row.appendChild(lbl);
+
+      if (candidates.length > 0) {
+        const isOpen = openPickerFor === pickerKey;
+        const btn = document.createElement("button");
+        btn.className = "link-btn" + (isOpen ? " open" : "");
+        btn.innerHTML = SVG_LINK;
+        btn.onclick = () => { openPickerFor = isOpen ? null : pickerKey; renderFormatos(); };
+        row.appendChild(btn);
+      }
+
+      const sel = document.createElement("select");
+      pl0.formatos.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.value; opt.textContent = f.label;
+        if (f.value === fmt) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.onchange = () => { group.forEach(v => active.set(v, sel.value)); renderSKUs(); };
+      row.appendChild(sel);
+      col.appendChild(row);
+
+      if (openPickerFor === pickerKey) {
+        if (candidates.length > 0) {
+          col.appendChild(buildPicker("Agregar al grupo:", candidates, peerVal => {
+            chains.forEach(g => { if (g !== group) { const i = g.indexOf(peerVal); if (i !== -1) g.splice(i,1); }});
+            chains = chains.filter(g => g === group || g.length > 1);
+            if (!group.includes(peerVal)) group.push(peerVal);
+            group.forEach(v => active.set(v, active.get(group[0]) || pl0.formatos[0].value));
+            openPickerFor = "grp:" + group[0];
+            renderAll();
+          }));
+        } else { openPickerFor = null; }
+      }
+    });
+
+    const allChained = new Set(chains.flat());
+    [...active.keys()].forEach(val => {
+      if (allChained.has(val)) return;
+      const pl = currentPlats.find(p => p.value === val);
+      const fmt = active.get(val);
+      const pickerKey = "ind:" + val;
+      const candidates = [...active.keys()].filter(v => v !== val);
+
+      const row = document.createElement("div");
+      row.className = "plat-format-row";
+      const lbl = document.createElement("span");
+      lbl.className = "plat-format-label";
+      lbl.textContent = pl.label;
+      row.appendChild(lbl);
+
+      if (candidates.length > 0) {
+        const isOpen = openPickerFor === pickerKey;
+        const btn = document.createElement("button");
+        btn.className = "link-btn" + (isOpen ? " open" : "");
+        btn.innerHTML = SVG_LINK;
+        btn.onclick = () => { openPickerFor = isOpen ? null : pickerKey; renderFormatos(); };
+        row.appendChild(btn);
+      }
+
+      const sel = document.createElement("select");
+      pl.formatos.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.value; opt.textContent = f.label;
+        if (f.value === fmt) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.onchange = () => { active.set(val, sel.value); renderSKUs(); };
+      row.appendChild(sel);
+      col.appendChild(row);
+
+      if (openPickerFor === pickerKey) {
+        if (candidates.length > 0) {
+          col.appendChild(buildPicker("Ligar con:", candidates, peerVal => {
+            let grp = chains.find(g => g.includes(val));
+            if (!grp) { grp = [val]; chains.push(grp); }
+            chains.forEach(g => { if (g !== grp) { const i = g.indexOf(peerVal); if (i !== -1) g.splice(i,1); }});
+            chains = chains.filter(g => g === grp || g.length > 1);
+            if (!grp.includes(peerVal)) grp.push(peerVal);
+            grp.forEach(v => active.set(v, active.get(val) || pl.formatos[0].value));
+            openPickerFor = "grp:" + grp[0];
+            renderAll();
+          }));
+        } else { openPickerFor = null; }
+      }
+    });
+  }
+
+  function buildPicker(title, candidates, onSelect) {
+    const picker = document.createElement("div");
+    picker.className = "chain-picker";
+    const p = document.createElement("p");
+    p.textContent = title;
+    picker.appendChild(p);
+    const div = document.createElement("div");
+    div.className = "picker-peers";
+    candidates.forEach(peerVal => {
+      const pl = currentPlats.find(p => p.value === peerVal);
+      if (!pl) return;
+      const b = document.createElement("button");
+      b.className = "picker-peer";
+      b.textContent = pl.label;
+      b.onclick = () => onSelect(peerVal);
+      div.appendChild(b);
+    });
+    picker.appendChild(div);
+    return picker;
+  }
+
+  const SVG_LINK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+  </svg>`;
+
+  function renderSKUs() {
+    const resultadoDiv = document.getElementById("resultado");
+    resultadoDiv.innerHTML = "";
+
+    const cli    = document.getElementById("cliente").value;
+    const fecha  = document.getElementById("fecha").value;
+    const fechaF = formatearFecha(fecha);
+    if (!cli) { renderFormatos(); return; }
+
+    function buildSKU(platTokens) {
+      const cliSKU = (modoCliente === "ALEATICA") ? "ALE" : cli;
+      const parts = [cliSKU];
+      const custom = document.getElementById("ale-custom").value.trim();
+
+      if (modoCliente === "ALEATICA") {
+        const sub = ALE_CLIENTES[cli];
+        if (sub) parts.push(sub);
+        const directivo = document.getElementById("ale-directivo").value;
+        if (directivo) parts.push(directivo);
+        if (custom) parts.push(custom);
+        if (fechaF) parts.push(fechaF);
+        const horario = getHorario();
+        if (horario) parts.push(horario);
+        platTokens.forEach(t => parts.push(t));
+        return parts.join("-");
+
+      } else if (modoCliente === "EVO") {
+        if (fechaF) parts.push(fechaF);
+        if (custom) parts.push(custom);
+        const cat   = document.getElementById("evo-categoria").value;
+        const linea = document.getElementById("evo-linea").value;
+        const gram  = getEvoGramaje();
+        if (cat)   parts.push(cat);
+        if (linea) parts.push(linea);
+        if (gram)  parts.push(gram);
+        platTokens.forEach(t => parts.push(t));
+        return parts.join("-");
+
+      } else if (modoCliente === "VARLIX") {
+        const pilar = document.getElementById("var-pilar").value;
+        const prod  = document.getElementById("var-producto").value;
+        if (pilar) parts.push(pilar);
+        if (prod)  parts.push(prod);
+        if (custom) parts.push(custom);
+
+      } else {
+        const sub = document.getElementById("submarca-gen").value;
+        if (sub) parts.push(sub);
+        if (custom) parts.push(custom);
+      }
+
+      if (fechaF) parts.push(fechaF);
+      platTokens.forEach(t => parts.push(t));
+      return parts.join("-");
+    }
+
+    if (active.size === 0) {
+      renderChip(buildSKU([]), resultadoDiv);
+      renderFormatos();
+      renderCarpeta();
+      renderMedidas();
+      return;
+    }
+
+    const chainedSet = new Set(chains.flat());
+    const renderedKeys = new Set();
+
+    chains.forEach(group => {
+      if (!group.every(v => active.has(v))) return;
+      const key = group.join("+");
+      if (renderedKeys.has(key)) return;
+      renderedKeys.add(key);
+      const fmt = active.get(group[0]) || "";
+      renderChip(buildSKU([...group, fmt]), resultadoDiv);
+    });
+
+    [...active.keys()].forEach(val => {
+      if (chainedSet.has(val)) return;
+      const fmt = active.get(val) || "";
+      renderChip(buildSKU([val, fmt]), resultadoDiv);
+    });
+
+    renderFormatos();
+    renderCarpeta();
+    renderMedidas();
+  }
+
+  function renderChip(sku, container) {
+    const chip = document.createElement("div");
+    chip.className = "sku-chip";
+    const span = document.createElement("span");
+    span.textContent = sku;
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copiar";
+    btn.onclick = () => {
+      navigator.clipboard.writeText(sku).then(() => {
+        btn.textContent = "¡Copiado!";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("copied"); }, 2000);
+      });
+    };
+    chip.appendChild(span);
+    chip.appendChild(btn);
+    container.appendChild(chip);
+  }
+
+  function renderAll() {
+    renderPlatGrid();
+    renderFormatos();
+    renderSKUs();
+    renderMedidas();
+  }
+
+  // ── HORARIO ALEATICA ──
+  function onHorarioInput() {
+    const el = document.getElementById("ale-horario");
+    el.value = el.value.replace(/[^0-9]/g, "").slice(0, 2);
+    renderSKUs();
+  }
+
+  function getHorario() {
+    const val = document.getElementById("ale-horario").value.trim();
+    if (!val) return "";
+    const h = parseInt(val, 10);
+    if (isNaN(h) || h < 0 || h > 23) return "";
+    return h < 12 ? `${h}am` : `${h}pm`;
+  }
+
+  // ── TOOLTIPS INFO ──
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".info-icon").forEach(icon => {
+      const tip = icon.querySelector(".info-tooltip");
+      icon.addEventListener("mouseenter", () => {
+        const rect = icon.getBoundingClientRect();
+        tip.style.left = (rect.left + rect.width / 2) + "px";
+        tip.style.top  = (rect.top - 8) + "px";
+        tip.style.opacity = "1";
+      });
+      icon.addEventListener("mouseleave", () => {
+        tip.style.opacity = "0";
+      });
+    });
+  });
+
+  // ── SKU CARPETA DRIVE ──
+  function buildSKUCarpeta() {
+    const cli    = document.getElementById("cliente").value;
+    const fecha  = document.getElementById("fecha").value;
+    const fechaF = formatearFecha(fecha);
+    if (!cli) return "";
+
+    const cliSKU = (modoCliente === "ALEATICA") ? "ALE" : cli;
+    const parts = [cliSKU];
+    const custom = document.getElementById("ale-custom").value.trim();
+
+    if (modoCliente === "ALEATICA") {
+      const sub = ALE_CLIENTES[cli];
+      if (sub) parts.push(sub);
+      const directivo = document.getElementById("ale-directivo").value;
+      if (directivo) parts.push(directivo);
+      if (custom) parts.push(custom);
+      if (fechaF) parts.push(fechaF);
+      const horario = getHorario();
+      if (horario) parts.push(horario);
+
+    } else if (modoCliente === "EVO") {
+      if (fechaF) parts.push(fechaF);
+      if (custom) parts.push(custom);
+      const cat   = document.getElementById("evo-categoria").value;
+      const linea = document.getElementById("evo-linea").value;
+      const gram  = getEvoGramaje();
+      if (cat)   parts.push(cat);
+      if (linea) parts.push(linea);
+      if (gram)  parts.push(gram);
+
+    } else if (modoCliente === "VARLIX") {
+      const pilar = document.getElementById("var-pilar").value;
+      const prod  = document.getElementById("var-producto").value;
+      if (pilar) parts.push(pilar);
+      if (prod)  parts.push(prod);
+      if (custom) parts.push(custom);
+      if (fechaF) parts.push(fechaF);
+
+    } else {
+      const sub = document.getElementById("submarca-gen").value;
+      if (sub) parts.push(sub);
+      if (custom) parts.push(custom);
+      if (fechaF) parts.push(fechaF);
+    }
+
+    return parts.join("-");
+  }
+
+  function renderCarpeta() {
+    const div = document.getElementById("resultado-carpeta");
+    const section = document.getElementById("carpeta-section");
+    const sku = buildSKUCarpeta();
+
+    if (!sku || sku.length < 3) {
+      section.style.display = "none";
+      return;
+    }
+    section.style.display = "block";
+    div.innerHTML = "";
+    const chip = document.createElement("div");
+    chip.className = "sku-chip carpeta";
+    const span = document.createElement("span");
+    span.textContent = sku;
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copiar";
+    btn.onclick = () => {
+      navigator.clipboard.writeText(sku).then(() => {
+        btn.textContent = "¡Copiado!";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("copied"); }, 2000);
+      });
+    };
+    chip.appendChild(span);
+    chip.appendChild(btn);
+    div.appendChild(chip);
+  }
+
+  // ── MEDIDAS POR PLATAFORMA Y FORMATO ───────────────────────────────────────
+  // Cada entrada puede tener: desc (texto), px (una medida) O pxs (array de medidas combinadas)
+  const MEDIDAS = {
+    FB: {
+      STO:   [{ px: "1080 × 1920" }],
+      IMG:   [{ px: "1080 × 1800" }, { px: "1080 × 1350" }, { px: "1080 × 1440" }, { desc: "Horizontal", px: "2048 × 1327" }],
+      CAR:   [{ px: "1080 × 1080" }, { px: "1080 × 1350" }, { px: "1080 × 1440" }],
+      COL:   [
+        { desc: "Vertical — 1ra img y complementaria",    pxs: ["800 × 1200", "1200 × 1200"] },
+        { desc: "Horizontal — 1ra img y complementaria",  pxs: ["1200 × 800", "1200 × 1200"] },
+      ],
+      GAL:   [
+        { desc: "2 imgs horizontal", px: "1200 × 800" },
+        { desc: "2 imgs vertical",   px: "960 × 1920" },
+        { desc: "3 imágenes",        px: "1500 × 1000" },
+        { desc: "4 imágenes",        px: "1080 × 1080" },
+        { desc: "5 imágenes",        px: "1200 × 1200" },
+      ],
+      VIDEO: [], REEL: [],
+    },
+    IG: {
+      STO:   [{ px: "1080 × 1920" }],
+      IMG:   [{ px: "1080 × 1080" }, { px: "1080 × 1350" }, { px: "1080 × 1440" }],
+      CAR:   [{ px: "1080 × 1800" }, { px: "1080 × 1350" }, { px: "1080 × 1440" }],
+      COL:   [
+        { desc: "Vertical — 1ra img y complementaria",    pxs: ["800 × 1200", "1200 × 1200"] },
+        { desc: "Horizontal — 1ra img y complementaria",  pxs: ["1200 × 800", "1200 × 1200"] },
+      ],
+      REEL: [], VIDEO: [],
+    },
+    LK: {
+      IMG:   [{ px: "1080 × 1080" }, { px: "1080 × 1350" }],
+      GAL:   [{ desc: "2 imgs vertical", px: "1080 × 2160" }],
+      COL:   [
+        { desc: "3 imgs",            px: "2048 × 1448" },
+        { desc: "3 imgs horizontal", px: "2048 × 1448" },
+        { desc: "4 imgs horizontal", px: "2048 × 1228" },
+        { desc: "3 imgs vertical",   px: "1280 × 1085" },
+        { desc: "5 imgs vertical",   px: "1080 × 1080" },
+      ],
+      VIDEO: [], CAR: [],
+    },
+    X: {
+      IMG:   [{ desc: "1 imagen", px: "1080 × 1080" }, { desc: "Horizontal", px: "2800 × 1867" }],
+      GAL:   [
+        { desc: "2 imgs vertical",                        px: "1080 × 1350" },
+        { desc: "3 imgs horiz. — 1ra img y siguientes",   pxs: ["2251 × 2813", "4001 × 2251"] },
+        { desc: "4 imgs horizontal",                      px: "2048 × 1152" },
+      ],
+      VIDEO: [],
+    },
+    WA: {
+      IMG: [{ px: "1080 × 1920" }],
+    },
+    META: {}, TK: {},
+  };
+
+  function renderMedidas() {
+    const section = document.getElementById("medidas-section");
+    const grid    = document.getElementById("medidas-grid");
+    const title   = document.getElementById("medidas-title");
+    grid.innerHTML = "";
+
+    const allChained = new Set(chains.flat());
+
+    // Recopilar plataformas activas con sus medidas
+    const platConMedidas = [];
+
+    function procesarPlat(platVal, fmtVal) {
+      const platData = MEDIDAS[platVal];
+      if (!platData) return;
+      const fmtData = platData[fmtVal];
+      if (!fmtData || fmtData.length === 0) return;
+      const pl = currentPlats.find(p => p.value === platVal);
+      platConMedidas.push({ label: pl ? pl.label : platVal, items: fmtData });
+    }
+
+    chains.forEach(group => {
+      if (!group.every(v => active.has(v))) return;
+      const fmt = active.get(group[0]);
+      group.forEach(v => procesarPlat(v, fmt));
+    });
+    [...active.keys()].forEach(val => {
+      if (allChained.has(val)) return;
+      procesarPlat(val, active.get(val));
+    });
+
+    if (platConMedidas.length === 0) { section.style.display = "none"; return; }
+
+    section.style.display = "block";
+    title.textContent = "Medidas";
+
+    // Una columna por plataforma
+    platConMedidas.forEach(plat => {
+      const col = document.createElement("div");
+      col.className = "medidas-col";
+
+      // Header de plataforma
+      const hdr = document.createElement("div");
+      hdr.className = "medidas-col-header";
+      hdr.textContent = plat.label;
+      col.appendChild(hdr);
+
+      // Chips de medidas
+      plat.items.forEach(m => {
+        const chip = document.createElement("div");
+        chip.className = "medida-chip";
+
+        const info = document.createElement("div");
+        info.className = "medida-chip-info";
+
+        if (m.desc) {
+          const desc = document.createElement("span");
+          desc.className = "medida-chip-desc";
+          desc.textContent = m.desc;
+          info.appendChild(desc);
+        }
+
+        // Medidas: px simple o pxs combinadas
+        const px = document.createElement("span");
+        px.className = "medida-chip-px";
+        const textoMedida = m.pxs ? m.pxs.join(" | ") : m.px;
+        px.textContent = textoMedida;
+        info.appendChild(px);
+
+        const btn = document.createElement("button");
+        btn.className = "medida-copy-btn";
+        btn.textContent = "Copiar";
+        btn.onclick = () => {
+          navigator.clipboard.writeText(textoMedida).then(() => {
+            btn.textContent = "✓";
+            btn.classList.add("copied");
+            setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("copied"); }, 2000);
+          });
+        };
+
+        chip.appendChild(info);
+        chip.appendChild(btn);
+        col.appendChild(chip);
+      });
+
+      grid.appendChild(col);
+    });
+  }
+
+  currentPlats = PLAT_SOCIAL;
+  renderPlatGrid();
+  renderSKUs();
+</script>
+</body>
+</html>
