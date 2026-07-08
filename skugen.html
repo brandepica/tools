@@ -380,6 +380,91 @@
       font-size: 0.72rem;
     }
     .footer-made img { height: 14px; width: auto; opacity: 0.5; vertical-align: middle; }
+    /* ── MEDIDAS ── */
+    .medidas-section {
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1.5px dashed var(--purple-light);
+    }
+    .medidas-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+      opacity: 0.6;
+    }
+    .medidas-grid {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      overflow-x: auto;
+    }
+    .medidas-col {
+      flex: 0 0 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .medidas-col-header {
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: white;
+      background: var(--purple);
+      border-radius: 0.3rem;
+      padding: 0.2rem 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.1rem;
+      white-space: nowrap;
+    }
+    .medida-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--purple-light);
+      border-radius: 0.35rem;
+      padding: 0.3rem 0.5rem;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+    .medida-chip-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+    .medida-chip-desc {
+      font-size: 0.6rem;
+      color: #888;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .medida-chip-px {
+      font-family: 'Lucida Console', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--purple);
+      white-space: nowrap;
+    }
+    .medida-copy-btn {
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.18rem 0.45rem;
+      font-size: 0.62rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .medida-copy-btn:hover { background: var(--green-dark); color: var(--purple); }
+    .medida-copy-btn.copied { background: var(--green); color: var(--purple); }
     @media (max-width: 600px) {
       .bottom-cols { grid-template-columns: 1fr; }
       .row-2, .row-3, .row-4 { grid-template-columns: 1fr; }
@@ -392,7 +477,7 @@
   <div class="header">
     <div>
       <img src="https://brandepica.com/firmas/generadortitulo.png" alt="Generador de SKU" style="height:24px; width:auto; max-width:100%; object-fit:contain; display:block;" />
-      <p style="margin:4px 0 0; font-size:0.72rem; color:#aaa; letter-spacing:0.04em;">Versión Beta 1.3</p>
+      <p style="margin:4px 0 0; font-size:0.72rem; color:#aaa; letter-spacing:0.04em;">Versión Beta 1.4</p>
     </div>
     <img src="https://brandepica.com/firmas/LogoBran.png" alt="Brandépica" style="height:22px; width:auto; object-fit:contain; flex-shrink:0;" />
   </div>
@@ -569,6 +654,12 @@
       <div class="col-title">SKUs generados</div>
       <div id="resultado"></div>
     </div>
+  </div>
+
+  <!-- Medidas: ancho completo, debajo de formatos y SKUs -->
+  <div id="medidas-section" style="display:none;" class="medidas-section">
+    <div class="medidas-title" id="medidas-title">Medidas</div>
+    <div class="medidas-grid" id="medidas-grid"></div>
   </div>
 
   <!-- SKU CARPETA DRIVE -->
@@ -1110,6 +1201,7 @@
       renderChip(buildSKU([]), resultadoDiv);
       renderFormatos();
       renderCarpeta();
+      renderMedidas();
       return;
     }
 
@@ -1133,6 +1225,7 @@
 
     renderFormatos();
     renderCarpeta();
+    renderMedidas();
   }
 
   function renderChip(sku, container) {
@@ -1159,6 +1252,7 @@
     renderPlatGrid();
     renderFormatos();
     renderSKUs();
+    renderMedidas();
   }
 
   // ── HORARIO ALEATICA ──
@@ -1271,9 +1365,191 @@
     div.appendChild(chip);
   }
 
+  // ── MEDIDAS DESDE GOOGLE SHEETS ────────────────────────────────────────────
+  const SHEETS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRoyitF4T6OMvnc0s5TbJ7rYFoP8NLdFcPqYc2Fj8deRr7LBK3UF0RJ8gQf6gAqyRi_zkrBxQYtmMd1/pub?output=csv";
+
+  const PLAT_NOMBRE_A_COD = {
+    "facebook": "FB", "instagram": "IG", "linkedin": "LK",
+    "x": "X", "tiktok": "TK", "whatsapp": "WA",
+    "youtube": "YT", "meta": "META",
+  };
+
+  let MEDIDAS = {};
+
+  // Parser de CSV real: respeta campos vacíos y campos entre comillas
+  // (la versión anterior usaba una regex que se comía las columnas vacías)
+  function parseCSVLine(linea) {
+    const result = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < linea.length; i++) {
+      const char = linea[i];
+      if (inQuotes) {
+        if (char === '"') {
+          if (linea[i + 1] === '"') { cur += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          cur += char;
+        }
+      } else {
+        if (char === '"') {
+          inQuotes = true;
+        } else if (char === ",") {
+          result.push(cur);
+          cur = "";
+        } else {
+          cur += char;
+        }
+      }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  async function cargarMedidas() {
+    try {
+      const resp = await fetch(SHEETS_CSV);
+      const csv  = await resp.text();
+      const filas = csv.split("\n").slice(1).filter(f => f.trim() !== "");
+
+      MEDIDAS = {};
+      filas.forEach(fila => {
+        const cols = parseCSVLine(fila);
+        if (cols.length < 5) return;
+        const limpiar = s => s ? s.trim() : "";
+
+        const platNombre = limpiar(cols[0]).toLowerCase();
+        const formato    = limpiar(cols[1]).toUpperCase();
+        const variante   = limpiar(cols[2]);
+        const desc       = limpiar(cols[3]);
+        const medidas    = limpiar(cols[4]);
+
+        if (!platNombre || !formato || !medidas) return;
+        const platCod = PLAT_NOMBRE_A_COD[platNombre];
+        if (!platCod) return;
+
+        if (!MEDIDAS[platCod]) MEDIDAS[platCod] = {};
+        if (!MEDIDAS[platCod][formato]) MEDIDAS[platCod][formato] = [];
+
+        const entrada = {};
+        // El texto visible muestra solo la variante o descripción corta
+        const etiquetaVisible = variante || desc || "";
+        if (etiquetaVisible) entrada.desc = etiquetaVisible;
+
+        // El texto del clipboard incluye variante + medidas con etiquetas
+        if (medidas.includes("|")) {
+          // Medidas combinadas: separar por | y construir texto clipboard
+          const partes = medidas.split("|").map(m => m.trim());
+          entrada.pxs = partes;
+          // Texto clipboard: "3 imágenes — 1ra imagen: 960 × 1920 | complementarias: 1080 × 1080"
+          entrada.clipboard = variante ? `${variante} — ${medidas}` : medidas;
+        } else {
+          entrada.px = medidas;
+          entrada.clipboard = medidas;
+        }
+
+        MEDIDAS[platCod][formato].push(entrada);
+      });
+
+      renderMedidas();
+    } catch(e) {
+      console.warn("No se pudieron cargar medidas desde Google Sheets:", e);
+    }
+  }
+
+  function renderMedidas() {
+    const section = document.getElementById("medidas-section");
+    const grid    = document.getElementById("medidas-grid");
+    const title   = document.getElementById("medidas-title");
+    grid.innerHTML = "";
+
+    const allChained = new Set(chains.flat());
+
+    // Recopilar plataformas activas con sus medidas
+    const platConMedidas = [];
+
+    function procesarPlat(platVal, fmtVal) {
+      const platData = MEDIDAS[platVal];
+      if (!platData) return;
+      const fmtData = platData[fmtVal];
+      if (!fmtData || fmtData.length === 0) return;
+      const pl = currentPlats.find(p => p.value === platVal);
+      platConMedidas.push({ label: pl ? pl.label : platVal, items: fmtData });
+    }
+
+    chains.forEach(group => {
+      if (!group.every(v => active.has(v))) return;
+      const fmt = active.get(group[0]);
+      group.forEach(v => procesarPlat(v, fmt));
+    });
+    [...active.keys()].forEach(val => {
+      if (allChained.has(val)) return;
+      procesarPlat(val, active.get(val));
+    });
+
+    if (platConMedidas.length === 0) { section.style.display = "none"; return; }
+
+    section.style.display = "block";
+    title.textContent = "Medidas";
+
+    // Una columna por plataforma
+    platConMedidas.forEach(plat => {
+      const col = document.createElement("div");
+      col.className = "medidas-col";
+
+      // Header de plataforma
+      const hdr = document.createElement("div");
+      hdr.className = "medidas-col-header";
+      hdr.textContent = plat.label;
+      col.appendChild(hdr);
+
+      // Chips de medidas
+      plat.items.forEach(m => {
+        const chip = document.createElement("div");
+        chip.className = "medida-chip";
+
+        const info = document.createElement("div");
+        info.className = "medida-chip-info";
+
+        if (m.desc) {
+          const desc = document.createElement("span");
+          desc.className = "medida-chip-desc";
+          desc.textContent = m.desc;
+          info.appendChild(desc);
+        }
+
+        // Medidas: px simple o pxs combinadas
+        const px = document.createElement("span");
+        px.className = "medida-chip-px";
+        const textoMedida = m.pxs ? m.pxs.join(" | ") : m.px;
+        px.textContent = textoMedida;
+        info.appendChild(px);
+
+        const btn = document.createElement("button");
+        btn.className = "medida-copy-btn";
+        btn.textContent = "Copiar";
+        btn.onclick = () => {
+          const textoCopiar = m.clipboard || (m.pxs ? m.pxs.join(" | ") : m.px);
+          navigator.clipboard.writeText(textoCopiar).then(() => {
+            btn.textContent = "✓";
+            btn.classList.add("copied");
+            setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("copied"); }, 2000);
+          });
+        };
+
+        chip.appendChild(info);
+        chip.appendChild(btn);
+        col.appendChild(chip);
+      });
+
+      grid.appendChild(col);
+    });
+  }
+
   currentPlats = PLAT_SOCIAL;
   renderPlatGrid();
   renderSKUs();
+  cargarMedidas();
 </script>
 </body>
 </html>
