@@ -1374,6 +1374,10 @@
     "youtube": "YT", "meta": "META",
   };
 
+  // META agrupa Facebook + Instagram: el Sheet no tiene fila "Meta" propia,
+  // así que al seleccionar META mostramos las medidas de FB e IG para ese formato.
+  const META_GRUPO = { FB: "Facebook", IG: "Instagram" };
+
   let MEDIDAS = {};
 
   // Parser de CSV real: respeta campos vacíos y campos entre comillas
@@ -1469,6 +1473,17 @@
     const platConMedidas = [];
 
     function procesarPlat(platVal, fmtVal) {
+      // META no tiene medidas propias en el Sheet: se expande a FB + IG
+      if (platVal === "META") {
+        Object.keys(META_GRUPO).forEach(cod => {
+          const platData = MEDIDAS[cod];
+          if (!platData) return;
+          const fmtData = platData[fmtVal];
+          if (!fmtData || fmtData.length === 0) return;
+          platConMedidas.push({ label: META_GRUPO[cod], items: fmtData });
+        });
+        return;
+      }
       const platData = MEDIDAS[platVal];
       if (!platData) return;
       const fmtData = platData[fmtVal];
