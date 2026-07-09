@@ -583,7 +583,7 @@
         <option value="BCAA">BCAA — BCAAs</option>
         <option value="CREA">CREA — Creatina</option>
         <option value="GLUT">GLUT — L-Glutamina</option>
-        <option value="COLA">COLA — Colágeno Hidrolizado</option>
+        <option value="COL">COL — Colágeno Hidrolizado</option>
         <option value="LCAR">LCAR — L-Carnitina</option>
         <option value="HYDR">HYDR — Hydromineral Pro</option>
         <option value="BAR">BAR — Protein Bars</option>
@@ -1416,7 +1416,7 @@
 
   async function cargarMedidas() {
     try {
-      const resp = await fetch(SHEETS_CSV);
+      const resp = await fetch(SHEETS_CSV + (SHEETS_CSV.includes("?") ? "&" : "?") + "_=" + Date.now());
       const csv  = await resp.text();
       const filas = csv.split("\n").slice(1).filter(f => f.trim() !== "");
 
