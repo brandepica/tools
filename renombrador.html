@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Renombrador Aleatica — Brandépica</title>
+<!-- Redirección de respaldo para navegadores sin JavaScript -->
+<meta http-equiv="refresh" content="0; url=https://script.google.com/a/macros/brandepica.com/s/AKfycbz-GNhLOsynBNGKxX4_VBjIh0K7oY4PD2kOyajImFXDBnKgDuojnlITeMkUzb6dEpc/exec" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #c8f000;
+    --purple: #4e2a6a;
+    --purple-light: rgba(78,42,106,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background-image: url('https://brandepica.com/firmas/Fondo_BE-01.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-color: #e8eaf0;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+    max-width: 420px;
+    width: 100%;
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+  h1 {
+    font-family: 'Climate Crisis', cursive;
+    font-size: 1.5rem;
+    color: var(--purple);
+    margin: 0 0 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+  }
+  p {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0 0 1.5rem;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--purple-light);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  a.manual {
+    display: inline-block;
+    background: var(--purple);
+    color: white;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.6rem 1.3rem;
+    border-radius: 0.4rem;
+    transition: background 0.15s;
+  }
+  a.manual:hover { background: #3d2153; }
+  img.logo { height: 20px; width: auto; margin-bottom: 1.5rem; opacity: 0.85; }
+</style>
+</head>
+<body>
+<div class="card">
+  <img class="logo" src="https://brandepica.com/firmas/LogoBran.png" alt="Brandépica" />
+  <div class="spinner"></div>
+  <h1>Renombrador Aleatica</h1>
+  <p>Te estamos llevando a la herramienta…</p>
+  <a class="manual" id="manualLink" href="#">Abrir manualmente</a>
+</div>
+
+<script>
+  // URL real de la aplicación en Apps Script.
+  // Si en algún momento se crea una nueva implementación y cambia la URL,
+  // solo hay que actualizar esta línea (y la del <meta http-equiv="refresh"> arriba).
+  const DESTINO = "https://script.google.com/a/macros/brandepica.com/s/AKfycbz-GNhLOsynBNGKxX4_VBjIh0K7oY4PD2kOyajImFXDBnKgDuojnlITeMkUzb6dEpc/exec";
+
+  document.getElementById('manualLink').href = DESTINO;
+
+  // Redirección inmediata por JavaScript (más rápida que el meta refresh)
+  window.location.replace(DESTINO);
+</script>
+</body>
+</html>
