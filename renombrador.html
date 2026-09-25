@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Renombrador Aleatica — Brandépica</title>
 <!-- Redirección de respaldo para navegadores sin JavaScript -->
-<meta http-equiv="refresh" content="0; url=https://script.google.com/a/macros/brandepica.com/s/AKfycbz-GNhLOsynBNGKxX4_VBjIh0K7oY4PD2kOyajImFXDBnKgDuojnlITeMkUzb6dEpc/exec" />
+<meta http-equiv="refresh" content="1; url=https://script.google.com/a/macros/brandepica.com/s/AKfycbz-GNhLOsynBNGKxX4_VBjIh0K7oY4PD2kOyajImFXDBnKgDuojnlITeMkUzb6dEpc/exec" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap" rel="stylesheet">
@@ -94,8 +94,19 @@
 
   document.getElementById('manualLink').href = DESTINO;
 
-  // Redirección inmediata por JavaScript (más rápida que el meta refresh)
-  window.location.replace(DESTINO);
+  function redirigir() {
+    window.location.replace(DESTINO);
+  }
+
+  // Espera a que las fuentes (incluida Climate Crisis) terminen de cargar
+  // antes de saltar, para que el splash no se vea con la tipografía de
+  // respaldo. Límite de 900ms por si la carga de fuentes falla o tarda.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(redirigir);
+    setTimeout(redirigir, 900);
+  } else {
+    setTimeout(redirigir, 400);
+  }
 </script>
 </body>
 </html>
